@@ -43,6 +43,14 @@ This document describes day-to-day development workflows for this project.
 - If `yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
 
+### Story IDs (Linear)
+
+- Story IDs are Linear ticket IDs in the format `eng-xxxx`
+- When starting a new story, ask if a Linear ticket exists; if yes, use it
+- If none exists, use a temporary story ID (format `temp-001`)
+- On Plan -> Breakdown, if the story ID is temporary, create a Linear ticket in team `eng`, assign it to `me`, and rename the story to the Linear ID
+- Include an acceptance criteria summary table from `acceptance.md` in the Linear description
+
 ## Commit Policy
 
 - Commit at the end of each coherent action (especially each execution task)

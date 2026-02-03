@@ -1,7 +1,7 @@
 # Task Graph
 
 > **Generated:** {YYYY-MM-DDTHH:MM:SS.sssZ}  
-> **Story:** [story-001](../README.md)  
+> **Story:** [{story-id}](../README.md)  
 > **Current task:** {task-id | none}  
 > **Next task:** {task-id | none}
 

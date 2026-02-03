@@ -4,4 +4,4 @@
 
 | Story | Summary | Status | Archived At | Path |
 |-------|---------|--------|-------------|------|
-| story-001 | {summary} | {superseded | complete} | {date} | [link](../story-001/README.md) |
+| eng-1234 | {summary} | {superseded | complete} | {date} | [link](../eng-1234/README.md) |

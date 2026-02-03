@@ -10,7 +10,7 @@
 
 ## Links
 
-- **Story:** [story-001](../README.md)
+- **Story:** [{story-id}](../README.md)
 - **Phase:** {N} (see [task-graph](./task-graph.md))
 - **Depends on:** [task-000](./task-000.md)
 - **Related research:** [topic](../../../research/internal/{topic}/README.md)

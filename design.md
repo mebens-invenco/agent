@@ -68,6 +68,7 @@
 - **Plan** requires explicit user sign-off to exit
 - **Breakdown**, **Execution**, and **Verification** can self-transition with guardrails
 - **Verification** runs immediately after Execution when allowed; if verification fails, yield for user input
+- On Plan -> Breakdown, if the story ID is temporary, create the Linear ticket and rename the story before proceeding
 - **Review** runs as a single-use stage and is re-runnable to update the PR or address feedback
 - **Review** advances to **Consolidation** only when the PR is merged
 - **Consolidation** is manually triggered by user between development cycles, except when Review detects a merged PR and runs it automatically
@@ -87,6 +88,15 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 - The agent must not transition to Breakdown, Execution, Review, or Consolidation while the lock is active
 - Plan runs are typically single-iteration (runner executes once and returns)
 - To proceed, update `allowed_stages` to include `breakdown` or clear the lock entirely
+
+### Story IDs (Linear)
+
+- Story IDs are Linear ticket IDs in the format `eng-xxxx`
+- When starting a new story, ask if a Linear ticket exists; if yes, use it as the story ID
+- If none exists, use a temporary story ID in the format `temp-001` during Plan
+- On Plan -> Breakdown, if the story ID is temporary, create a Linear ticket (team `eng`, assignee `me`) and rename the story to the Linear ID
+- Include an acceptance criteria summary table from `acceptance.md` in the Linear description
+- If Linear creation fails or is blocked, yield and stop before Breakdown
 
 ---
 
@@ -234,6 +244,8 @@ ALLOWED_STAGES="review"
 - Internal research (code analysis of existing system)
 - External research (web research on patterns, technologies, best practices)
 - Collaborative story definition with user
+- Ask whether a Linear ticket exists for the story
+- If no Linear ticket exists, assign a temporary story ID (format `temp-001`)
 - Acceptance criteria creation
 - Architectural decision making and pattern selection
 - Update story definition with design notes
@@ -254,6 +266,7 @@ ALLOWED_STAGES="review"
 **Purpose:** Decompose approved story definitions into atomic, verifiable tasks. Produce task artifacts and dependency graph.
 
 **Activities:**
+- If the story ID is temporary, create a Linear ticket (team `eng`, assignee `me`), rename the story to the Linear ID, and update links, indices, and state
 - Analyze story definitions and acceptance criteria
 - Create atomic tasks (small, deterministically verifiable)
 - Define task dependencies
@@ -441,11 +454,11 @@ docs: [agent:plan] establish auth story and design baseline
 Artifacts:
 - created: .agent/research/internal/existing-auth/README.md
 - created: .agent/research/internal/existing-auth/existing-auth.md
-- created: .agent/stories/story-001/README.md
-- created: .agent/stories/story-001/definition.md
-- created: .agent/stories/story-001/acceptance.md
+- created: .agent/stories/eng-1234/README.md
+- created: .agent/stories/eng-1234/definition.md
+- created: .agent/stories/eng-1234/acceptance.md
 
-Refs: story-001
+Refs: eng-1234
 ```
 
 Breakdown:
@@ -454,11 +467,11 @@ Breakdown:
 docs: [agent:breakdown] define story tasks and dependency graph
 
 Artifacts:
-- created: .agent/stories/story-001/tasks/task-graph.md
-- created: .agent/stories/story-001/tasks/task-001.md
-- created: .agent/stories/story-001/tasks/task-002.md
+- created: .agent/stories/eng-1234/tasks/task-graph.md
+- created: .agent/stories/eng-1234/tasks/task-001.md
+- created: .agent/stories/eng-1234/tasks/task-002.md
 
-Refs: story-001
+Refs: eng-1234
 ```
 
 Execution:
@@ -468,7 +481,7 @@ feat: [agent:execution] implement auth persistence layer
 
 Artifacts:
 - updated: src/auth/storage.ts
-- updated: .agent/stories/story-001/tasks/task-003.md
+- updated: .agent/stories/eng-1234/tasks/task-003.md
 
 Refs: task-003
 ```
@@ -479,9 +492,9 @@ Verification:
 test: [agent:verification] confirm auth acceptance criteria
 
 Artifacts:
-- updated: .agent/stories/story-001/acceptance.md
+- updated: .agent/stories/eng-1234/acceptance.md
 
-Refs: story-001
+Refs: eng-1234
 ```
 
 Review:
@@ -493,7 +506,7 @@ Artifacts:
 - updated: .agent/state.yaml
 - updated: src/auth/storage.ts
 
-Refs: story-001
+Refs: eng-1234
 ```
 
 Consolidation:
@@ -506,7 +519,7 @@ Artifacts:
 - updated: .agent/research/README.md
 - updated: .agent/stories/_archive/README.md
 
-Refs: story-001
+Refs: eng-1234
 ```
 
 ---
@@ -633,10 +646,12 @@ Each top-level artifact category has a `README.md` index at its root with a tabl
 
 Artifacts reference each other via relative markdown links:
 
+Story IDs should use Linear ticket IDs (`eng-xxxx`). Temporary IDs (`temp-001`) are allowed during Plan and must be replaced on Plan -> Breakdown.
+
 ```markdown
 ## Links
 
-- **Story:** [story-001](../README.md)
+- **Story:** [eng-1234](../README.md)
 - **Task Graph:** [execution plan](./task-graph.md)
 - **Depends on:** [task-000](./task-000.md)
 - **Related research:** [existing-auth](../../../research/internal/existing-auth/README.md)
@@ -650,7 +665,7 @@ A single file `stories/{story-id}/tasks/task-graph.md` defines execution order, 
 # Task Graph
 
 > **Generated:** 2025-01-29T11:00:00.000Z  
-> **Story:** [story-001](../README.md)  
+> **Story:** [eng-1234](../README.md)  
 > **Current task:** task-003  
 > **Next task:** task-004
 
@@ -826,6 +841,7 @@ The agent yields to user if:
 - **Acceptance Criteria:** [Testable criteria](./acceptance.md)
 - **Tasks:** [task graph](./tasks/task-graph.md)
 - **Research:** [related research](../../research/internal/{topic}/README.md)
+- **Linear:** {eng-xxxx}
 ```
 
 ### Story Definition Template
@@ -905,6 +921,15 @@ Each criterion follows the pattern:
 **Result:** {pass | fail | pending | deferred}  
 **Evidence:** {test output, logs, or link}  
 **Notes:** {any clarification}
+
+---
+
+## Summary
+
+| AC | Description | Method | Result | Priority |
+|----|-------------|--------|--------|----------|
+| AC-001 | {desc} | automated | pending | must |
+| AC-002 | {desc} | manual | pending | should |
 ```
 
 ### Task Template
@@ -922,7 +947,7 @@ Each criterion follows the pattern:
 
 ## Links
 
-- **Story:** [story-001](../README.md)
+- **Story:** [eng-1234](../README.md)
 - **Phase:** {N} (see [task-graph](./task-graph.md))
 - **Depends on:** [task-000](./task-000.md)
 - **Related research:** [topic](../../../research/internal/{topic}/README.md)
@@ -974,7 +999,7 @@ Each criterion follows the pattern:
 # Task Graph
 
 > **Generated:** {YYYY-MM-DDTHH:MM:SS.sssZ}  
-> **Story:** [story-001](../README.md)  
+> **Story:** [eng-1234](../README.md)  
 > **Current task:** {task-id | none}  
 > **Next task:** {task-id | none}
 
