@@ -431,8 +431,10 @@ Review runs are always single-use. Each invocation performs one review pass, upd
 
 ### Git Commit Format
 
+Use a conventional commit type while keeping the agent stage tag:
+
 ```
-[agent:{stage}] {action_summary}
+{type}: [agent:{stage}] {action_summary}
 
 Artifacts:
 - created: {path}
@@ -441,12 +443,14 @@ Artifacts:
 Refs: {story-id or task-id}
 ```
 
+Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `perf`.
+
 ### Commit Message Examples
 
 Discovery:
 
 ```
-[agent:discovery] establish auth story and research baseline
+docs: [agent:discovery] establish auth story and research baseline
 
 Artifacts:
 - created: .agent/research/internal/existing-auth/README.md
@@ -461,7 +465,7 @@ Refs: story-001
 Design:
 
 ```
-[agent:design] capture auth architecture inside story definition
+docs: [agent:design] capture auth architecture inside story definition
 
 Artifacts:
 - updated: .agent/stories/story-001/definition.md
@@ -472,7 +476,7 @@ Refs: story-001
 Breakdown:
 
 ```
-[agent:breakdown] define story tasks and dependency graph
+docs: [agent:breakdown] define story tasks and dependency graph
 
 Artifacts:
 - created: .agent/stories/story-001/tasks/task-graph.md
@@ -485,7 +489,7 @@ Refs: story-001
 Execution:
 
 ```
-[agent:execution] implement auth persistence layer
+feat: [agent:execution] implement auth persistence layer
 
 Artifacts:
 - updated: src/auth/storage.ts
@@ -497,7 +501,7 @@ Refs: task-003
 Verification:
 
 ```
-[agent:verification] verify acceptance criteria for auth story
+test: [agent:verification] verify acceptance criteria for auth story
 
 Artifacts:
 - created: .agent/stories/story-001/verifications/README.md
@@ -509,7 +513,7 @@ Refs: story-001
 Review:
 
 ```
-[agent:review] update auth PR in response to review feedback
+fix: [agent:review] address auth review feedback
 
 Artifacts:
 - updated: .agent/state.yaml
@@ -521,7 +525,7 @@ Refs: story-001
 Consolidation:
 
 ```
-[agent:consolidation] merge auth research and archive superseded story
+chore: [agent:consolidation] merge auth research and archive superseded story
 
 Artifacts:
 - updated: .agent/research/internal/existing-auth/existing-auth.md
