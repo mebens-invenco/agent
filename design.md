@@ -59,7 +59,8 @@
 | **Breakdown** | Autonomous capable | Decompose into atomic, verifiable tasks | stories/*/tasks/* | All tasks defined |
 | **Execution** | Autonomous capable | Implement tasks, verify each deterministically | Code changes | All tasks complete |
 | **Verification** | Autonomous capable | Verify acceptance criteria are met | stories/*/verifications/* | All AC verified or deferred |
-| **Consolidation** | Interactive only | Archive stale artifacts and merge related research | Archives, merges | User approval |
+| **Review** | Autonomous capable (single-use) | Create/update PR and address review feedback | PR, state updates | PR merged, then run Consolidation |
+| **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts and merge related research | Archives, merges | User approval or Review auto-run complete |
 
 ### Stage Transitions
 
@@ -67,7 +68,9 @@
 - If `allowed_stages` is set in state, transitions must stay within that list
 - **Discovery** and **Design** require explicit user sign-off to exit
 - **Breakdown**, **Execution**, and **Verification** can self-transition with guardrails
-- **Consolidation** is manually triggered by user between development cycles
+- **Review** runs as a single-use stage and is re-runnable to update the PR or address feedback
+- **Review** advances to **Consolidation** only when the PR is merged
+- **Consolidation** is manually triggered by user between development cycles, except when Review detects a merged PR and runs it automatically
 - Thrashing detection: if >3 transitions occur without artifact creation, yield to user
 
 ### Operating Modes
@@ -167,7 +170,7 @@ Recommended behavior:
 
 Recommended runners:
 
-- `.agent/agent-run-once.sh` — plan + breakdown (single iteration)
+- `.agent/agent-run-once.sh` — plan + breakdown + review + consolidation (single iteration)
 - `.agent/agent-loop.sh` — execution loop (defaults Allowed stages to `execution`; override to include `verification`)
 - `.agent/agent-run-once.sh` uses `opencode --model` for interactive sessions
 - `.agent/agent-loop.sh` uses `opencode run --model --variant` for looping runs (default: `VARIANT=medium`)
@@ -208,6 +211,21 @@ while true; do
     cat .agent/prompt.md
   } | opencode run
 done
+```
+
+Review single-run sketch:
+
+```bash
+MODE="review"
+LOOP="once"
+ALLOWED_STAGES="review"
+
+{
+  printf "Mode: %s\n" "$MODE"
+  printf "Loop: %s\n" "$LOOP"
+  printf "Allowed stages: %s\n\n" "$ALLOWED_STAGES"
+  cat .agent/prompt.md
+} | opencode run
 ```
 
 ---
@@ -303,10 +321,38 @@ done
 
 **Exit Condition:** All acceptance criteria verified or explicitly deferred (with reason).
 
+### Review Stage
+
+**Mode:** Autonomous capable (single-use)  
+**Purpose:** Push the current branch, create or update a PR, address review feedback, and advance to consolidation when the PR is merged.
+
+**Activities:**
+- Push the current branch to the remote
+- Discover an existing PR for the current branch; if none exists, create one with `gh pr create`
+- If a PR template exists, populate it with the story summary, verification results, tests run, and known risks
+- If a PR exists, pull unresolved review threads and implement requested changes
+- Commit and push changes after addressing feedback
+- If a retest request template exists and a retest is needed, post a PR comment using that template
+- Check PR status (open/merged) and approvals; record PR metadata in state
+- If PR is merged, transition to Consolidation and execute it immediately in the same run
+
+**Template Handling:**
+- PR templates: `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, or `.github/PULL_REQUEST_TEMPLATE/*.md` (prefer `default.md`, else first by name)
+- Retest request templates: any `.github/*retest*template*.md` (case-insensitive); use when requesting CI retest
+
+**Artifacts Produced:**
+- PR updates (title/body/comments)
+- Code changes + commits (when addressing review feedback)
+- `state.yaml` updates (PR metadata/status)
+
+**Exit Condition:** PR merged; Review transitions to Consolidation and runs it immediately.
+
+**Notes:** Review is re-runnable and always returns control after a single pass. If the PR is open and approved but not merged, report status and suggest merging; otherwise report outstanding reviews and stop.
+
 ### Consolidation Stage
 
-**Mode:** Interactive only  
-**Purpose:** Archive stale artifacts and merge related research. Triggered manually by user between development cycles.
+**Mode:** Interactive only (auto-run when Review detects merged PR)  
+**Purpose:** Archive stale artifacts and merge related research. Triggered manually by user between development cycles, or automatically after Review detects a merged PR.
 
 **Activities:**
 - Archive superseded/completed stories to `_archive/`
@@ -315,7 +361,7 @@ done
 - Clean up dead links in indices
 - Reset task graph for next cycle
 
-**Exit Condition:** User approves consolidation is complete.
+**Exit Condition:** User approves consolidation is complete. When invoked automatically from Review on a merged PR, the stage completes after actions are executed and reported.
 
 ---
 
@@ -341,6 +387,7 @@ LOOP START
 │      - Read relevant index (based on current stage)
 │      - Read README.md files to find focus
 │      - In execution: read task-graph.md, then only the active task file; avoid other task files unless a dependency blocks progress or the active task explicitly references them
+│      - In review: identify PR status, unresolved review threads, and applicable templates
 │      - Load body files only when needed
 │
 ├─→ 2. DECIDE
@@ -377,6 +424,10 @@ LOOP END
 ### Key Constraint
 
 **One loop = one coherent action.** Not "research everything" but "research authentication patterns for this stack."
+
+### Review Run (Single-use)
+
+Review runs are always single-use. Each invocation performs one review pass, updates the PR if needed, and returns control. If the PR is merged, the run transitions to Consolidation and executes it immediately.
 
 ### Git Commit Format
 
@@ -455,6 +506,18 @@ Artifacts:
 Refs: story-001
 ```
 
+Review:
+
+```
+[agent:review] update auth PR in response to review feedback
+
+Artifacts:
+- updated: .agent/state.yaml
+- updated: src/auth/storage.ts
+
+Refs: story-001
+```
+
 Consolidation:
 
 ```
@@ -478,12 +541,17 @@ Refs: story-001
 # .agent/state.yaml
 
 current:
-  stage: discovery   # discovery | design | breakdown | execution | verification | consolidation
+  stage: discovery   # discovery | design | breakdown | execution | verification | review | consolidation
   allowed_stages: [] # optional stage lock, empty means no lock
   focus:
     story: null      # active story id
     task: null       # active task id during execution
     verification: null
+  review:
+    pr_number: null
+    pr_url: null
+    pr_state: null   # open | merged | closed
+    last_checked: null
 
 transitions:
   history:
@@ -823,9 +891,17 @@ The agent yields to user if:
    - If not set, select the next pending task from the task graph, set `current.focus.task`, then read only that task file
    - Do not read other task files unless a dependency blocks progress or the active task explicitly references them
 6. For verification: read the active story acceptance and verification README; read individual verification files only when needed
-7. If in execution stage, perform one coherent task and update artifacts and state
-8. If in execution stage and blocked or approval is required, create `yield.md` and stop
-9. If not in execution stage, perform one coherent action appropriate to the stage, update artifacts and state, and yield if approval is required
+7. For review:
+   - Use `gh` to locate an existing PR for the current branch
+   - If the PR is merged, transition to consolidation and execute consolidation actions immediately
+   - If no PR exists, push the branch and create a PR using any template found
+   - If a PR exists, collect unresolved review threads, implement requested changes, commit, and push
+   - If a retest request template exists and a retest is needed, post a PR comment using it
+   - Record PR metadata and status in state
+   - Return control after the single review pass
+8. If in execution stage, perform one coherent task and update artifacts and state
+9. If in execution stage and blocked or approval is required, create `yield.md` and stop
+10. If in discovery/design/breakdown/verification/consolidation, perform one coherent action appropriate to the stage, update artifacts and state, and yield if approval is required (consolidation requires approval unless invoked from review after merge)
 ```
 
 ### Story README Template
@@ -1104,13 +1180,15 @@ This document describes day-to-day development workflows for this project.
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
 - Verification: verify acceptance criteria
+- Review: open/update PR, address review feedback, advance on merge
 - Consolidation: archive and merge research
 
 ### Transitions
 
 - Discovery and Design require explicit user approval to exit
 - Breakdown, Execution, and Verification can self-transition with guardrails
-- Consolidation is manually triggered between development cycles
+- Review is single-use and re-runnable; it advances to Consolidation only when the PR is merged
+- Consolidation is manually triggered between development cycles, except when Review detects a merged PR and runs it automatically
 
 ### Guardrails
 
@@ -1122,6 +1200,7 @@ This document describes day-to-day development workflows for this project.
 
 - Plan + breakdown: single-iteration runner (e.g., `.agent/agent-run-once.sh`)
 - Execution + verification: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution`)
+- Review + consolidation: single-iteration runner (e.g., `.agent/agent-run-once.sh`, Allowed stages `review` or `consolidation`)
 - Both runners must pass `.agent/prompt.md` as the first message and include a short run header
 
 ## Project Structure
