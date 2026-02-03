@@ -6,7 +6,7 @@ PROMPT_PATH="${PROMPT_PATH:-$AGENT_DIR/prompt.md}"
 YIELD_PATH="${YIELD_PATH:-$AGENT_DIR/yield.md}"
 MODE="${MODE:-autonomous}"
 LOOP="until_yield"
-ALLOWED_STAGES="${ALLOWED_STAGES:-execution}"
+ALLOWED_STAGES="${ALLOWED_STAGES:-execution,verification,review}"
 MODEL="${MODEL:-openai/gpt-5.2-codex}"
 VARIANT="${VARIANT:-medium}"
 

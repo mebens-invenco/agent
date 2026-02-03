@@ -1,23 +1,17 @@
 current:
-  stage: discovery
+  stage: plan
   allowed_stages: []
   focus:
     story: null
     task: null
-    verification: null
-
-transitions:
-  history:
-    - from: null
-      to: discovery
-      at: "2026-02-02T00:00:00.000Z"
-      reason: "process initialized"
-  count_since_artifact: 0
+  review:
+    pr_number: null
+    pr_url: null
+    pr_state: null
+    last_checked: null
 
 last_loop:
   mode: interactive
   at: "2026-02-02T00:00:00.000Z"
   action: "initialized process"
   commit: null
-
-stories: {}

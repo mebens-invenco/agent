@@ -20,9 +20,3 @@ Tasks execute in phases. All tasks in a phase must complete before the next phas
 | Task | Summary | Status | Blocked By |
 |------|---------|--------|------------|
 | [task-002](./task-002.md) | {one-line summary} | pending | task-001 |
-
-## Dependency Diagram
-
-```
-{diagram}
-```

@@ -22,24 +22,26 @@ This document describes day-to-day development workflows for this project.
 
 ### Stages
 
-- Discovery: research + story creation
-- Design: architecture and implementation notes inside story definition
+- Plan: research + story creation + acceptance criteria + design notes
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
-- Verification: verify acceptance criteria
+- Verification: confirm all acceptance criteria and record results in `acceptance.md`
+- Review: open/update PR, address review feedback, advance on merge
 - Consolidation: archive and merge research
 
 ### Transitions
 
-- Discovery and Design require explicit user approval to exit
+- Plan requires explicit user approval to exit
 - Breakdown, Execution, and Verification can self-transition with guardrails
-- Consolidation is manually triggered between development cycles
+- Verification runs immediately after Execution when allowed; if verification fails, yield for user input
+- In loop mode, proceed to Review only if `review` is allowed; otherwise yield after Verification
+- Review is single-use and re-runnable; it advances to Consolidation only when the PR is merged
+- Consolidation is manually triggered between development cycles, except when Review detects a merged PR and runs it automatically
 
 ### Guardrails
 
 - If `yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
-- Thrashing: more than 3 transitions without artifact creation yields to the user
 
 ## Commit Policy
 
@@ -64,7 +66,8 @@ Refs: {story-id or task-id}
 ## Runner Scripts
 
 - Plan + breakdown: single-iteration runner (e.g., `.agent/agent-run-once.sh`)
-- Execution + verification: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution`)
+- Execution + verification + review: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution,verification,review`)
+- Review + consolidation: single-iteration runner (e.g., `.agent/agent-run-once.sh`, Allowed stages `review` or `consolidation`)
 - `.agent/agent-run-once.sh` uses `opencode --model` for interactive sessions
 - `.agent/agent-loop.sh` uses `opencode run --model --variant` for looping runs (default: `VARIANT=medium`)
 - Both runners must pass `.agent/prompt.md` as the first message and include a short run header

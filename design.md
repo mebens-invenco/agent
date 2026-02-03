@@ -44,7 +44,7 @@
 |---------|------------|
 | Context minimization vs. decision quality | Two-layer artifacts (README + body) allow fast relevance scanning |
 | Deterministic verification is aspirational | Use automated tests, linting, strong types, SCA where possible; acknowledge manual verification honestly |
-| Stage fluidity vs. progress tracking | Track transitions in state.yaml; detect thrashing; require user approval for collaborative stages |
+| Stage fluidity vs. progress tracking | Track current stage and last loop; require user approval for collaborative stages |
 
 ---
 
@@ -54,11 +54,10 @@
 
 | Stage | Mode | Purpose | Artifacts | Exit Condition |
 |-------|------|---------|-----------|----------------|
-| **Discovery** | Interactive only | Research & user collaboration to create stories with acceptance criteria | research/*, stories/* | User approval |
-| **Design** | Interactive only | Collaborate on architecture and implementation patterns | stories/* | User approval |
+| **Plan** | Interactive only | Research, story definition, acceptance criteria, and design guidance | research/*, stories/* | User approval |
 | **Breakdown** | Autonomous capable | Decompose into atomic, verifiable tasks | stories/*/tasks/* | All tasks defined |
-| **Execution** | Autonomous capable | Implement tasks, verify each deterministically | Code changes | All tasks complete |
-| **Verification** | Autonomous capable | Verify acceptance criteria are met | stories/*/verifications/* | All AC verified or deferred |
+| **Execution** | Autonomous capable | Implement tasks in dependency order | Code changes | All tasks complete |
+| **Verification** | Autonomous capable | Confirm acceptance criteria and record results in acceptance | stories/*/acceptance.md | All AC verified or deferred |
 | **Review** | Autonomous capable (single-use) | Create/update PR and address review feedback | PR, state updates | PR merged, then run Consolidation |
 | **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts and merge related research | Archives, merges | User approval or Review auto-run complete |
 
@@ -66,12 +65,12 @@
 
 - The agent may move from one stage to any other stage at any time
 - If `allowed_stages` is set in state, transitions must stay within that list
-- **Discovery** and **Design** require explicit user sign-off to exit
+- **Plan** requires explicit user sign-off to exit
 - **Breakdown**, **Execution**, and **Verification** can self-transition with guardrails
+- **Verification** runs immediately after Execution when allowed; if verification fails, yield for user input
 - **Review** runs as a single-use stage and is re-runnable to update the PR or address feedback
 - **Review** advances to **Consolidation** only when the PR is merged
 - **Consolidation** is manually triggered by user between development cycles, except when Review detects a merged PR and runs it automatically
-- Thrashing detection: if >3 transitions occur without artifact creation, yield to user
 
 ### Operating Modes
 
@@ -82,10 +81,10 @@
 
 ### Planning Mode (Stage Lock)
 
-Plan mode is a stage-locked workflow used to define stories and design without entering implementation.
+Plan mode is a stage-locked workflow used to define stories, acceptance criteria, and design without entering implementation.
 
-- Set `allowed_stages` to `[discovery, design]` in state (or in the runner header) before the run
-- The agent must not transition to Breakdown or Execution while the lock is active
+- Set `allowed_stages` to `[plan]` in state (or in the runner header) before the run
+- The agent must not transition to Breakdown, Execution, Review, or Consolidation while the lock is active
 - Plan runs are typically single-iteration (runner executes once and returns)
 - To proceed, update `allowed_stages` to include `breakdown` or clear the lock entirely
 
@@ -95,24 +94,21 @@ Plan mode is a stage-locked workflow used to define stories and design without e
 
 ```
 .agent/
-├── state.yaml                      # Current state: stage, focus, transitions
+├── state.yaml                      # Current state: stage, focus, review
 ├── usage.md                        # Day-to-day: commands, tooling, workflows
 ├── prompt.md                       # Runner bootstrap prompt (first message)
 ├── agent-run-once.sh               # Single-iteration runner (plan + breakdown)
-├── agent-loop.sh                   # Loop runner (execution + verification)
+├── agent-loop.sh                   # Loop runner (execution)
 ├── yield.md                        # Singular. Exists = agent needs user. Delete to resume.
 ├── .lock                           # Uncommitted. Exists during autonomous loop execution.
 │
 ├── templates/
-│   ├── _template_README.md         # Generic artifact head template
 │   ├── _template_research.md       # Research body template
 │   ├── _template_story_README.md   # Story README template
 │   ├── _template_story_definition.md
 │   ├── _template_acceptance.md     # Acceptance criteria template
-│   ├── _template_prompt.md          # Runner bootstrap prompt template
 │   ├── _template_task.md
 │   ├── _template_task_graph.md
-│   └── _template_verification.md
 │
 ├── research/
 │   ├── README.md                   # Research index
@@ -134,9 +130,6 @@ Plan mode is a stage-locked workflow used to define stories and design without e
 │   │   ├── tasks/
 │   │   │   ├── task-graph.md       # Execution order, dependencies
 │   │   │   └── {task-id}.md
-│   │   └── verifications/
-│   │       ├── README.md           # Story verification summary
-│   │       └── {ac-id}.md          # Individual AC verification
 │   └── _archive/                   # Completed/superseded stories
 │       └── README.md
 │
@@ -152,9 +145,9 @@ On first run in a new repo:
 
 1. Create the `.agent/` structure and `templates/`
 2. Create index files: `research/README.md`, `stories/README.md`
-3. Create `state.yaml` with default discovery stage
+3. Create `state.yaml` with default plan stage
 4. Create `usage.md`
-5. Create `prompt.md` from the prompt template
+5. Create `prompt.md` from the bootstrap instructions
 6. Optionally add `.agent/.lock` and `yield.md` to `.gitignore`
 
 ### Setup Script (agent-setup.sh)
@@ -170,8 +163,8 @@ Recommended behavior:
 
 Recommended runners:
 
-- `.agent/agent-run-once.sh` — plan + breakdown + review + consolidation (single iteration)
-- `.agent/agent-loop.sh` — execution loop (defaults Allowed stages to `execution`; override to include `verification`)
+- `.agent/agent-run-once.sh` — single-iteration runner (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
+- `.agent/agent-loop.sh` — execution loop (defaults Allowed stages to `execution,verification,review`)
 - `.agent/agent-run-once.sh` uses `opencode --model` for interactive sessions
 - `.agent/agent-loop.sh` uses `opencode run --model --variant` for looping runs (default: `VARIANT=medium`)
 
@@ -182,7 +175,7 @@ Example run header usage:
 ```bash
 MODE="plan"
 LOOP="once"
-ALLOWED_STAGES="discovery,design"
+ALLOWED_STAGES="plan"
 
 {
   printf "Mode: %s\n" "$MODE"
@@ -202,7 +195,7 @@ while true; do
 
   MODE="autonomous"
   LOOP="until_yield"
-  ALLOWED_STAGES="execution"
+  ALLOWED_STAGES="execution,verification,review"
 
   {
     printf "Mode: %s\n" "$MODE"
@@ -232,16 +225,19 @@ ALLOWED_STAGES="review"
 
 ## Stage Definitions
 
-### Discovery Stage
+### Plan Stage
 
 **Mode:** Interactive only  
-**Purpose:** Research and collaborate with user to understand requirements. Produce research artifacts and user stories with acceptance criteria.
+**Purpose:** Research and collaborate with user to define stories, acceptance criteria, and design guidance.
 
 **Activities:**
 - Internal research (code analysis of existing system)
 - External research (web research on patterns, technologies, best practices)
 - Collaborative story definition with user
 - Acceptance criteria creation
+- Architectural decision making and pattern selection
+- Update story definition with design notes
+- User collaboration on trade-offs
 
 **Artifacts Produced:**
 - `research/internal/{topic}/README.md` + `{topic}.md`
@@ -250,25 +246,7 @@ ALLOWED_STAGES="review"
 - `stories/{story-id}/definition.md`
 - `stories/{story-id}/acceptance.md`
 
-**Exit Condition:** User explicitly approves that stories and acceptance criteria are complete.
-
-### Design Stage
-
-**Mode:** Interactive only  
-**Purpose:** Collaborate with user to design architecture and implementation patterns. Capture design rationale and guidance inside the story definition.
-
-**Activities:**
-- Architectural decision making
-- Pattern selection
-- Implementation approach definition
-- Update story definition with design notes
-- User collaboration on trade-offs
-
-**Artifacts Produced:**
-- `stories/{story-id}/README.md`
-- `stories/{story-id}/definition.md`
-
-**Exit Condition:** User explicitly approves that design work is complete.
+**Exit Condition:** User explicitly approves that planning work (stories, acceptance criteria, design) is complete.
 
 ### Breakdown Stage
 
@@ -290,34 +268,37 @@ ALLOWED_STAGES="review"
 ### Execution Stage
 
 **Mode:** Autonomous capable  
-**Purpose:** Implement tasks in dependency order. Produce code and configuration changes.
+**Purpose:** Implement tasks in dependency order.
 
 **Activities:**
 - Execute tasks in phase order per stories/{story-id}/tasks/task-graph.md
 - Verify each task deterministically (tests, linting, type checking)
 - Update task status
-- If verification fails, attempt to fix; if cannot fix, yield
+- If task verification fails, attempt to fix; if cannot fix, yield
 
 **Artifacts Produced:**
 - Code and configuration changes in the repository
 - Task status updates
 
-**Exit Condition:** All tasks complete and verified.
+**Exit Condition:** All tasks complete.
 
 ### Verification Stage
 
 **Mode:** Autonomous capable  
-**Purpose:** Verify all acceptance criteria are met. Produce verification artifacts with evidence.
+**Purpose:** Confirm all acceptance criteria and record verification results.
+
+**Timing:** Typically runs immediately after Execution within the same loop when allowed.
 
 **Activities:**
-- Test each acceptance criterion
+- Read `stories/{story-id}/acceptance.md`
+- Confirm each acceptance criterion
 - Run automated tests where possible
 - Document manual verification requirements
-- Collect evidence (test output, screenshots, logs)
+- Record results and evidence in `acceptance.md`
+- If verification fails or is blocked, yield (blocker before Review)
 
 **Artifacts Produced:**
-- `stories/{story-id}/verifications/README.md`
-- `stories/{story-id}/verifications/{ac-id}.md`
+- `stories/{story-id}/acceptance.md`
 
 **Exit Condition:** All acceptance criteria verified or explicitly deferred (with reason).
 
@@ -329,7 +310,7 @@ ALLOWED_STAGES="review"
 **Activities:**
 - Push the current branch to the remote
 - Discover an existing PR for the current branch; if none exists, create one with `gh pr create`
-- If a PR template exists, populate it with the story summary, verification results, tests run, and known risks
+- If a PR template exists, populate it with the story summary, acceptance verification results, tests run, and known risks
 - If a PR exists, pull unresolved review threads and implement requested changes
 - Commit and push changes after addressing feedback
 - If a retest request template exists and a retest is needed, post a PR comment using that template
@@ -348,6 +329,8 @@ ALLOWED_STAGES="review"
 **Exit Condition:** PR merged; Review transitions to Consolidation and runs it immediately.
 
 **Notes:** Review is re-runnable and always returns control after a single pass. If the PR is open and approved but not merged, report status and suggest merging; otherwise report outstanding reviews and stop.
+
+**Constraint:** Review runs only after Verification has passed.
 
 ### Consolidation Stage
 
@@ -386,13 +369,15 @@ LOOP START
 │      - Read state.yaml
 │      - Read relevant index (based on current stage)
 │      - Read README.md files to find focus
+│      - In plan/breakdown: read the active story README, definition, and acceptance
 │      - In execution: read task-graph.md, then only the active task file; avoid other task files unless a dependency blocks progress or the active task explicitly references them
+│      - In verification: read acceptance criteria and current results
 │      - In review: identify PR status, unresolved review threads, and applicable templates
 │      - Load body files only when needed
 │
 ├─→ 2. DECIDE
 │      - Choose ONE action appropriate to stage
-│      - If stuck/thrashing detected:
+│      - If stuck:
 │          - If interactive mode: Ask user
 │          - If autonomous mode: Create yield.md, STOP
 │
@@ -402,9 +387,7 @@ LOOP START
 │
 ├─→ 4. RECORD
 │      - Update relevant index
-│      - Update state.yaml
-│          - Reset count_since_artifact if artifact created
-│          - Record transition if stage changed
+│      - Update state.yaml (current stage, focus, review metadata, allowed stages)
 │      - Propose research updates if patterns observed
 │
 ├─→ 5. COMMIT
@@ -414,7 +397,10 @@ LOOP START
 │      - Delete .lock file (if exists)
 │
 ├─→ 6. CONTINUE / YIELD
-│      - If stage complete AND requires user sign-off: yield for approval
+│      - If stage complete AND requires user sign-off (plan or consolidation): yield for approval
+│      - If execution completes and `verification` is allowed, proceed to verification in the same run
+│      - If verification passes and `review` is allowed, proceed to review in the same run; if `review` is not allowed, return control or yield (autonomous mode)
+│      - Yield only after review or when blocked
 │      - If autonomous AND work remains: continue to next loop
 │      - If interactive: return control to user
 │
@@ -447,10 +433,10 @@ Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, 
 
 ### Commit Message Examples
 
-Discovery:
+Plan:
 
 ```
-docs: [agent:discovery] establish auth story and research baseline
+docs: [agent:plan] establish auth story and design baseline
 
 Artifacts:
 - created: .agent/research/internal/existing-auth/README.md
@@ -458,17 +444,6 @@ Artifacts:
 - created: .agent/stories/story-001/README.md
 - created: .agent/stories/story-001/definition.md
 - created: .agent/stories/story-001/acceptance.md
-
-Refs: story-001
-```
-
-Design:
-
-```
-docs: [agent:design] capture auth architecture inside story definition
-
-Artifacts:
-- updated: .agent/stories/story-001/definition.md
 
 Refs: story-001
 ```
@@ -501,11 +476,10 @@ Refs: task-003
 Verification:
 
 ```
-test: [agent:verification] verify acceptance criteria for auth story
+test: [agent:verification] confirm auth acceptance criteria
 
 Artifacts:
-- created: .agent/stories/story-001/verifications/README.md
-- created: .agent/stories/story-001/verifications/ac-001.md
+- updated: .agent/stories/story-001/acceptance.md
 
 Refs: story-001
 ```
@@ -545,37 +519,22 @@ Refs: story-001
 # .agent/state.yaml
 
 current:
-  stage: discovery   # discovery | design | breakdown | execution | verification | review | consolidation
-  allowed_stages: [] # optional stage lock, empty means no lock
+  stage: plan           # plan | breakdown | execution | verification | review | consolidation
+  allowed_stages: []    # optional stage lock, empty means no lock
   focus:
-    story: null      # active story id
-    task: null       # active task id during execution
-    verification: null
+    story: null         # active story id
+    task: null          # active task id during execution
   review:
     pr_number: null
     pr_url: null
-    pr_state: null   # open | merged | closed
+    pr_state: null      # open | merged | closed
     last_checked: null
 
-transitions:
-  history:
-    - from: null
-      to: discovery
-      at: "2025-01-29T10:00:00.000Z"
-      reason: "process initialized"
-  count_since_artifact: 0
-
 last_loop:
-  mode: interactive  # interactive | autonomous
+  mode: interactive     # interactive | autonomous
   at: "2025-01-29T10:00:00.000Z"
   action: "initialized process"
   commit: null
-
-stories:
-  # Quick reference for story statuses
-  story-001:
-    status: active      # draft | active | complete | superseded
-    verification: partial
 ```
 
 ### Stage Locks
@@ -590,7 +549,7 @@ A singular file. If it exists, the agent must stop and wait for user.
 # Yield
 
 > **Created:** 2025-01-29T10:30:45.000Z  
-> **Stage:** design  
+> **Stage:** plan  
 > **Last loop mode:** autonomous  
 
 ## What I Was Doing
@@ -719,28 +678,20 @@ Tasks execute in phases. All tasks in a phase must complete before the next phas
 |------|---------|--------|------------|
 | [task-005](./task-005.md) | User repository | pending | task-003, task-004 |
 
-## Dependency Diagram
+### Acceptance Verification
 
-```
-task-001 ─┬─→ task-003 ─┬─→ task-005
-task-002 ─┘             │
-                        │
-          task-004 ─────┘
-```
-```
+Verification results live inside `stories/{story-id}/acceptance.md` under each criterion:
 
-### Verification Structure
+```markdown
+## AC-001: {Short description}
 
-One verification artifact per acceptance criterion, organized under each story:
+**Given** {precondition}  
+**When** {action}  
+**Then** {expected outcome}
 
-```
-stories/
-└── story-001/
-    └── verifications/
-        ├── README.md       # Story verification summary
-        ├── ac-001.md       # Individual AC verification
-        ├── ac-002.md
-        └── ac-003.md
+**Verification:** {automated | manual}  
+**Result:** {pass | fail | pending | deferred}  
+**Evidence:** {test output, logs, or link}
 ```
 
 ---
@@ -822,28 +773,6 @@ The agent yields to user if:
 
 ## Templates
 
-### Generic Artifact README Template
-
-```markdown
-# {Title}
-
-> **Status:** {draft | active | complete | superseded}  
-> **Created:** {YYYY-MM-DDTHH:MM:SS.sssZ}  
-> **Updated:** {YYYY-MM-DDTHH:MM:SS.sssZ}
-
-## Summary
-
-{2-4 sentences. Enough to determine relevance without loading full details.}
-
-## Links
-
-- **Related:** [link](./path/to/README.md)
-
-## Full Details
-
-[{title}](./{filename}.md)
-```
-
 ### Research Template
 
 ```markdown
@@ -852,9 +781,7 @@ The agent yields to user if:
 > **Type:** {internal | external}  
 > **Status:** {draft | active | complete | superseded}  
 > **Created:** {YYYY-MM-DDTHH:MM:SS.sssZ}  
-> **Updated:** {YYYY-MM-DDTHH:MM:SS.sssZ}  
-> **Confidence:** {established | emerging | experimental | low}  
-> **Applied count:** {N}
+> **Updated:** {YYYY-MM-DDTHH:MM:SS.sssZ}
 
 ## Summary
 
@@ -871,41 +798,13 @@ The agent yields to user if:
 - **Pattern:** {clear description of the preferred pattern}
 - **Rationale:** {why this is preferred}
 - **Source:** {user preference | observed pattern | agent hypothesis}
+- **Confidence:** {established | emerging | experimental | low}
+- **Applied count:** {N}
 - **Conflicts:** {links to related or superseded research}
 
 ## Sources
 
 - {links, citations, or artifacts}
-```
-
-### Runner Prompt Template
-
-```markdown
-# Agent Bootstrap
-
-## Instructions
-
-1. Read `.agent/state.yaml` and `.agent/usage.md`
-2. If the run header provided Allowed stages, enforce them and persist to state
-3. Determine the current stage and active story from state
-4. For discovery/design/breakdown: read the active story README, definition, and acceptance
-5. For execution:
-   - Read the story task graph at `stories/{story-id}/tasks/task-graph.md`
-   - If `current.focus.task` is set, read only that task file
-   - If not set, select the next pending task from the task graph, set `current.focus.task`, then read only that task file
-   - Do not read other task files unless a dependency blocks progress or the active task explicitly references them
-6. For verification: read the active story acceptance and verification README; read individual verification files only when needed
-7. For review:
-   - Use `gh` to locate an existing PR for the current branch
-   - If the PR is merged, transition to consolidation and execute consolidation actions immediately
-   - If no PR exists, push the branch and create a PR using any template found
-   - If a PR exists, collect unresolved review threads, implement requested changes, commit, and push
-   - If a retest request template exists and a retest is needed, post a PR comment using it
-   - Record PR metadata and status in state
-   - Return control after the single review pass
-8. If in execution stage, perform one coherent task and update artifacts and state
-9. If in execution stage and blocked or approval is required, create `yield.md` and stop
-10. If in discovery/design/breakdown/verification/consolidation, perform one coherent action appropriate to the stage, update artifacts and state, and yield if approval is required (consolidation requires approval unless invoked from review after merge)
 ```
 
 ### Story README Template
@@ -927,18 +826,6 @@ The agent yields to user if:
 - **Acceptance Criteria:** [Testable criteria](./acceptance.md)
 - **Tasks:** [task graph](./tasks/task-graph.md)
 - **Research:** [related research](../../research/internal/{topic}/README.md)
-- **Verification:** [verification status](./verifications/README.md)
-
-## Quick Status
-
-| Aspect | Status |
-|--------|--------|
-| Definition | {draft | complete} |
-| Acceptance Criteria | {N} defined |
-| Design | {pending | in-progress | complete} |
-| Tasks | {N} defined |
-| Implementation | {pending | in-progress | complete} |
-| Verification | {N}/{M} passing |
 ```
 
 ### Story Definition Template
@@ -1001,6 +888,9 @@ Each criterion follows the pattern:
 - **Given** {precondition}
 - **When** {action}
 - **Then** {expected outcome}
+- **Verification:** {automated | manual}
+- **Result:** {pass | fail | pending | deferred}
+- **Evidence:** {test output, logs, or link}
 
 ---
 
@@ -1010,17 +900,11 @@ Each criterion follows the pattern:
 **When** {action}  
 **Then** {expected outcome}
 
-**Verification method:** {automated | manual}  
+**Verification:** {automated | manual}  
+**Test location:** `{path to test file}` (if automated)  
+**Result:** {pass | fail | pending | deferred}  
+**Evidence:** {test output, logs, or link}  
 **Notes:** {any clarification}
-
----
-
-## Summary
-
-| AC | Description | Method | Priority |
-|----|-------------|--------|----------|
-| AC-001 | {desc} | automated | must |
-| AC-002 | {desc} | manual | should |
 ```
 
 ### Task Template
@@ -1110,46 +994,6 @@ Tasks execute in phases. All tasks in a phase must complete before the next phas
 |------|---------|--------|------------|
 | [task-002](./task-002.md) | {one-line summary} | pending | task-001 |
 
-## Dependency Diagram
-
-```
-{diagram}
-```
-```
-
-### Verification Template
-
-```markdown
-# AC Verification: {ac-id}
-
-> **Acceptance Criterion:** {criterion text}  
-> **Source:** [story-001/acceptance.md](../acceptance.md#{ac-id})  
-> **Verified:** {YYYY-MM-DDTHH:MM:SS.sssZ}
-
-## Method
-
-**Type:** {automated | manual}  
-**Test location:** `{path to test file}` (if automated)
-
-## Verification Steps
-
-1. {Step 1}
-2. {Step 2}
-3. {Step 3}
-
-## Result
-
-**{✅ Pass | ❌ Fail | ⏳ Pending | 🔄 Deferred}**
-
-## Evidence
-
-```
-{Test output, logs, or other evidence}
-```
-
-## Notes
-
-{Any additional context, issues encountered, or follow-up needed}
 ```
 
 ### usage.md Template
@@ -1179,18 +1023,19 @@ This document describes day-to-day development workflows for this project.
 
 ### Stages
 
-- Discovery: research + story creation
-- Design: architecture and implementation notes inside story definition
+- Plan: research + story creation + acceptance criteria + design notes
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
-- Verification: verify acceptance criteria
+- Verification: confirm all acceptance criteria and record results in `acceptance.md`
 - Review: open/update PR, address review feedback, advance on merge
 - Consolidation: archive and merge research
 
 ### Transitions
 
-- Discovery and Design require explicit user approval to exit
+- Plan requires explicit user approval to exit
 - Breakdown, Execution, and Verification can self-transition with guardrails
+- Verification runs immediately after Execution when allowed; if verification fails, yield for user input
+- In loop mode, proceed to Review only if `review` is allowed; otherwise yield after Verification
 - Review is single-use and re-runnable; it advances to Consolidation only when the PR is merged
 - Consolidation is manually triggered between development cycles, except when Review detects a merged PR and runs it automatically
 
@@ -1198,12 +1043,11 @@ This document describes day-to-day development workflows for this project.
 
 - If `yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
-- Thrashing: more than 3 transitions without artifact creation yields to the user
 
 ## Runner Scripts
 
 - Plan + breakdown: single-iteration runner (e.g., `.agent/agent-run-once.sh`)
-- Execution + verification: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution`)
+- Execution + verification + review: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution,verification,review`)
 - Review + consolidation: single-iteration runner (e.g., `.agent/agent-run-once.sh`, Allowed stages `review` or `consolidation`)
 - Both runners must pass `.agent/prompt.md` as the first message and include a short run header
 

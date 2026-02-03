@@ -4,8 +4,6 @@
 > **Status:** {draft | active | complete | superseded}
 > **Created:** {YYYY-MM-DDTHH:MM:SS.sssZ}
 > **Updated:** {YYYY-MM-DDTHH:MM:SS.sssZ}
-> **Confidence:** {established | emerging | experimental | low}
-> **Applied count:** {N}
 
 ## Summary
 

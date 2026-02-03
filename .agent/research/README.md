@@ -6,4 +6,5 @@
 
 | Topic | Summary | Type | Status | Updated | Path |
 |-------|---------|------|--------|---------|------|
-| {topic} | {summary} | {internal | external} | {draft | active | complete | superseded} | {date} | [link](./internal/{topic}/README.md) |
+
+No entries yet.

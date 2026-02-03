@@ -4,4 +4,5 @@
 
 | Story | Summary | Status | Updated | Path |
 |-------|---------|--------|---------|------|
-| story-001 | {summary} | {draft | active | complete | superseded} | {date} | [link](./story-001/README.md) |
+
+No entries yet.
