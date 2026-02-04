@@ -26,8 +26,8 @@ This document describes day-to-day development workflows for this project.
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
 - Verification: confirm acceptance criteria and record results in `acceptance.md`
-- Review: open/update PR, address review feedback, advance on merge
-- Consolidation: archive and merge research
+- Review: open/update PR, address review feedback, capture review learnings, advance on merge
+- Consolidation: archive and merge research, merge review learnings
 
 ### Transitions
 
@@ -35,6 +35,11 @@ This document describes day-to-day development workflows for this project.
 - Breakdown, Execution, and Verification can self-transition
 - Review runs only after Verification passes
 - Consolidation is manually triggered between development cycles, except when Review detects a merged PR and runs it automatically
+
+### Review Learnings
+
+- Capture review feedback in `.agent/stories/{story-id}/review-learnings.md` as short summaries and abstractions
+- Consolidation merges review learnings into the research system (update confidence and applied count)
 
 ### Guardrails
 

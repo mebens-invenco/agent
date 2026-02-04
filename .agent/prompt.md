@@ -48,6 +48,8 @@
 - If no PR exists, push the branch and create a PR using any template found
 - If a PR exists, collect unresolved review threads and implement requested changes
   - Commit and push changes only if authorized
+- Synthesize review comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
+  - If no review comments exist, record that in `review-learnings.md` with the date
 - Record PR metadata and status in state
 - Return control after the single review pass
 
@@ -56,6 +58,7 @@
 - Archive superseded/completed stories to `_archive/`
 - Merge overlapping research artifacts (with user approval)
 - Consolidate research learnings and clean up indices
+- Merge review learnings from `.agent/stories/{story-id}/review-learnings.md` into research artifacts
 - If consolidation is complete, create `yield.md` for approval and stop
 
 ## Common Post-steps (always)

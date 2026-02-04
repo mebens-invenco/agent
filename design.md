@@ -58,7 +58,7 @@
 | **Breakdown** | Autonomous capable | Decompose into atomic, verifiable tasks | .agent/stories/*/tasks/* | All tasks defined |
 | **Execution** | Autonomous capable | Implement tasks in dependency order | Code changes | All tasks complete |
 | **Verification** | Autonomous capable | Confirm acceptance criteria and record results in acceptance | .agent/stories/*/acceptance.md | All AC verified or deferred |
-| **Review** | Autonomous capable (single-use) | Create/update PR and address review feedback | PR, state updates | PR merged, then run Consolidation |
+| **Review** | Autonomous capable (single-use) | Create/update PR, address review feedback, and capture review learnings | PR, review learnings, state updates | PR merged, then run Consolidation |
 | **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts and merge related research | Archives, merges | User approval or Review auto-run complete |
 
 ### Stage Transitions
@@ -116,6 +116,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 │   ├── _template_story_README.md   # Story README template
 │   ├── _template_story_definition.md
 │   ├── _template_acceptance.md     # Acceptance criteria template
+│   ├── _template_review_learnings.md
 │   ├── _template_task.md
 │   ├── _template_task_graph.md
 │
@@ -139,6 +140,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 │   │   ├── tasks/
 │   │   │   ├── task-graph.md       # Execution order, dependencies
 │   │   │   └── {task-id}.md
+│   │   ├── review-learnings.md     # Review comment summaries + abstractions
 │   └── _archive/                   # Completed/superseded stories
 │       └── README.md
 │
@@ -318,7 +320,7 @@ ALLOWED_STAGES="review"
 ### Review Stage
 
 **Mode:** Autonomous capable (single-use)  
-**Purpose:** Push the current branch, create or update a PR, address review feedback, and advance to consolidation when the PR is merged.
+**Purpose:** Push the current branch, create or update a PR, address review feedback, capture review learnings, and advance to consolidation when the PR is merged.
 
 **Activities:**
 - Push the current branch to the remote
@@ -326,6 +328,8 @@ ALLOWED_STAGES="review"
 - If a PR template exists, populate it with the story summary, acceptance verification results, tests run, and known risks
 - If a PR exists, pull unresolved review threads and implement requested changes
 - Commit and push changes after addressing feedback
+- Synthesize review comments into short summaries and abstractions; record in `.agent/stories/{story-id}/review-learnings.md`
+- If no review comments exist, record that in `review-learnings.md` with date
 - If a retest request template exists and a retest is needed, post a PR comment using that template
 - Check PR status (open/merged) and approvals; record PR metadata in state
 - If PR is merged, transition to Consolidation and execute it immediately in the same run
@@ -337,6 +341,7 @@ ALLOWED_STAGES="review"
 **Artifacts Produced:**
 - PR updates (title/body/comments)
 - Code changes + commits (when addressing review feedback)
+- `.agent/stories/{story-id}/review-learnings.md`
 - `state.yaml` updates (PR metadata/status)
 
 **Exit Condition:** PR merged; Review transitions to Consolidation and runs it immediately.
@@ -354,6 +359,7 @@ ALLOWED_STAGES="review"
 - Archive superseded/completed stories to `_archive/`
 - Merge overlapping research artifacts (with user approval)
 - Consolidate research learnings (merge duplicates, update confidence)
+- Merge review learnings into research artifacts (update confidence, applied count)
 - Clean up dead links in indices
 - Reset task graph for next cycle
 
@@ -743,6 +749,10 @@ Each research body can include learnings with explicit metadata:
 - **Source:** {user preference | observed pattern | agent hypothesis}
 - **Conflicts:** links to related or superseded research
 
+### Review Learnings
+
+Review learnings are captured per story in `.agent/stories/{story-id}/review-learnings.md`. Consolidation merges these learnings into the research system, updating confidence and applied counts, and linking to relevant topics.
+
 ### Confidence Levels
 
 | Level | Meaning | Agent Behavior |
@@ -839,6 +849,7 @@ The agent yields to user if:
 
 - **Definition:** [Full story details](./definition.md)
 - **Acceptance Criteria:** [Testable criteria](./acceptance.md)
+- **Review Learnings:** [review learnings](./review-learnings.md)
 - **Tasks:** [task graph](./tasks/task-graph.md)
 - **Research:** [related research](../../research/internal/{topic}/README.md)
 - **Linear:** {eng-xxxx}
@@ -930,6 +941,35 @@ Each criterion follows the pattern:
 |----|-------------|--------|--------|----------|
 | AC-001 | {desc} | automated | pending | must |
 | AC-002 | {desc} | manual | pending | should |
+```
+
+### Review Learnings Template
+
+```markdown
+# {Story ID}: Review Learnings
+
+> **PR:** {pr-url}  \
+> **Captured:** {YYYY-MM-DDTHH:MM:SS.sssZ}  \
+> **Status:** {draft | consolidated}
+
+## Comment Summaries
+
+{Short summaries of review comments. Include thread links or quoted excerpts.}
+
+## Abstractions / Learnings
+
+### {Learning Title}
+
+- **Summary:** {short abstraction derived from comments}
+- **Rationale:** {why this matters}
+- **Source:** {review feedback | user preference}
+- **Confidence:** {established | emerging | experimental | low}
+- **Applied count:** {N}
+- **Related research:** {links if any}
+
+## Follow-ups
+
+- {Any open questions, recommended research updates, or changes to apply next time}
 ```
 
 ### Task Template
@@ -1097,4 +1137,3 @@ src/
 
 {Deployment information or link}
 ```
-
