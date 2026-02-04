@@ -142,6 +142,7 @@ fi
 ITERATION=0
 while true; do
   if [[ -f "$YIELD_PATH" ]]; then
+    rm -f "$YIELD_PATH"
     exit 0
   fi
   ITERATION=$((ITERATION + 1))
