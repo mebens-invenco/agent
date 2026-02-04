@@ -1098,26 +1098,3 @@ src/
 {Deployment information or link}
 ```
 
----
-
-## What's Left to Define
-
-No open items right now. Capture new open questions in this section as they arise.
-
----
-
-## Prompt for Continuation
-
-**To continue this design discussion in Claude Code, use this prompt:**
-
-```
-I'm continuing a design discussion for an AI agent development process. I have a comprehensive design document at [path to this file].
-
-Please read the document and then let's discuss the "What's Left to Define" section:
-
-1. Planning mode and stage locks — Are the constraints appropriate?
-2. Bootstrap + runner scripts — Any adjustments to script behavior or prompts?
-3. Research schema — Any changes to the combined research + learnings metadata?
-
-Let's work through these one at a time.
-```
