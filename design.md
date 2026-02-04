@@ -108,7 +108,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 ├── usage.md                        # Agent-only runbook; repo workflows live in CLAUDE.md
 ├── prompt.md                       # Runner bootstrap prompt (first message)
 ├── agent.sh                        # Unified runner (loop by default, --once for single run)
-├── yield.md                        # Singular. Exists = agent needs user. Delete to resume.
+├── yield.md                        # .agent/yield.md; exists = agent needs user. Delete to resume.
 ├── .lock                           # Uncommitted. Exists during autonomous loop execution.
 │
 ├── templates/
@@ -159,7 +159,7 @@ On first run in a new repo:
 3. Create `state.yaml` with default plan stage
 4. Create `usage.md` (agent-only guidance; repo workflows live in `CLAUDE.md`)
 5. Create `prompt.md` from the bootstrap instructions
-6. Optionally add `.agent/.lock` and `yield.md` to `.gitignore`
+6. Optionally add `.agent/.lock` and `.agent/yield.md` to `.gitignore`
 
 ### Setup Script (setup.sh)
 
@@ -169,7 +169,7 @@ Recommended behavior:
 - Copy missing files and folders without overwriting
 - Always overwrite `.agent/prompt.md`, `.agent/usage.md`, and `.agent/agent.sh`
 - Ensure `.agent/agent.sh` is executable
-- Optionally update `.gitignore` with `.agent/.lock` and `yield.md`
+- Optionally update `.gitignore` with `.agent/.lock` and `.agent/yield.md`
 
 ### Runner Scripts
 
@@ -378,11 +378,11 @@ Each iteration of the agent follows this structure:
 LOOP START
 │
 ├─→ 0. PRECHECK
-│      - If yield.md exists: READ it, STOP, inform user
+│      - If `.agent/yield.md` exists: READ it, STOP, inform user
 │      - If .lock exists AND last_loop.mode == autonomous:
 │          - Dirty state detected
 │          - If interactive now: Inform user, suggest `git checkout -- .`
-│          - If autonomous now: Create yield.md explaining dirty state, STOP
+│          - If autonomous now: Create `.agent/yield.md` explaining dirty state, STOP
 │      - If autonomous mode: Create .lock file
 │
 ├─→ 1. ORIENT
@@ -399,7 +399,7 @@ LOOP START
 │      - Choose ONE action appropriate to stage
 │      - If stuck:
 │          - If interactive mode: Ask user
-│          - If autonomous mode: Create yield.md, STOP
+│          - If autonomous mode: Create `.agent/yield.md`, STOP
 │
 ├─→ 3. ACT
 │      - Execute the action
@@ -561,9 +561,9 @@ last_loop:
 
 If `allowed_stages` is non-empty, the agent must not transition outside that list. This is used for plan mode and for safe resumption after interruptions. If a runner provides a run header with `Allowed stages`, the agent should apply that lock and persist it in state.
 
-### yield.md
+### .agent/yield.md
 
-A singular file. If it exists, the agent must stop and wait for user.
+A singular file at `.agent/yield.md`. If it exists, the agent must stop and wait for user.
 
 ```markdown
 # Yield
@@ -587,7 +587,7 @@ A singular file. If it exists, the agent must stop and wait for user.
 ## How to Resume
 
 1. Respond to the questions above (in chat or edit this file)
-2. Delete this file
+2. Delete `.agent/yield.md`
 3. Run the agent again
 
 ## Context for Resumption
@@ -613,7 +613,7 @@ action: executing task-012
 
 If `.lock` exists and last loop was autonomous:
 - **Interactive mode now:** Inform user, suggest `git checkout -- .` to reset
-- **Autonomous mode now:** Create yield.md explaining dirty state, stop
+- **Autonomous mode now:** Create `.agent/yield.md` explaining dirty state, stop
 
 ---
 
@@ -1094,7 +1094,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 
 ### Guardrails
 
-- If `yield.md` exists, stop and return control to the user
+- If `.agent/yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
 
 ### Story IDs (Linear)

@@ -27,7 +27,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 
 ### Guardrails
 
-- If `yield.md` exists, stop and return control to the user
+- If `.agent/yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
 
 ### Story IDs (Linear)

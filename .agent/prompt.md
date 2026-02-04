@@ -15,7 +15,7 @@
   - If no: create a temporary story ID (format `temp-001`) and proceed
 - Create/update `.agent/stories/{story-id}/README.md`, `.agent/stories/{story-id}/definition.md`, and `.agent/stories/{story-id}/acceptance.md`
 - Perform one coherent planning action and update artifacts, indices, and state
-- If planning is complete, create `yield.md` for approval and stop
+- If planning is complete, create `.agent/yield.md` for approval and stop
 
 ### Breakdown
 
@@ -32,14 +32,14 @@
 - Implement one coherent task, update task status and code changes
 - Run any tests you add or modify at the end of the task; fix failures before proceeding
 - Commit at the end of the task using the structured commit format in `usage.md` (see Commit Authorization below)
-- If blocked or approval is required, create `yield.md` and stop
+- If blocked or approval is required, create `.agent/yield.md` and stop
 
 ### Verification
 
 - Read `.agent/stories/{story-id}/acceptance.md`
 - Confirm each acceptance criterion and record results in `acceptance.md`
 - Run automated tests where possible and document manual verification requirements
-- If verification fails or is blocked, create `yield.md` and stop
+- If verification fails or is blocked, create `.agent/yield.md` and stop
 
 ### Review
 
@@ -59,7 +59,7 @@
 - Merge overlapping research artifacts (with user approval)
 - Consolidate research learnings and clean up indices
 - Merge review learnings from `.agent/stories/{story-id}/review-learnings.md` into research artifacts
-- If consolidation is complete, create `yield.md` for approval and stop
+- If consolidation is complete, create `.agent/yield.md` for approval and stop
 
 ## Common Post-steps (always)
 
@@ -71,5 +71,5 @@ Commit Authorization: This prompt invocation is the user's explicit request to c
 ## Flow Control
 
 - If execution completes and `verification` is allowed, proceed to verification in the same run
-- If verification passes and `review` is allowed, proceed to review in the same run; if `review` is not allowed, return control (create `yield.md` if in autonomous loop)
+- If verification passes and `review` is allowed, proceed to review in the same run; if `review` is not allowed, return control (create `.agent/yield.md` if in autonomous loop)
 - Yield only after review or when blocked
