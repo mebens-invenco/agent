@@ -335,7 +335,7 @@ ALLOWED_STAGES="review"
 - If PR is merged, transition to Consolidation and execute it immediately in the same run
 
 **Template Handling:**
-- PR templates: `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, or `.github/PULL_REQUEST_TEMPLATE/*.md` (prefer `default.md`, else first by name)
+- PR templates: search case-insensitively under the `.github/` directory for `pull_request_template.md` or `pull_request_template/*.md` (prefer `default.md`, else first by name)
 - Retest request templates: any `.github/*retest*template*.md` (case-insensitive); use when requesting CI retest
 
 **Artifacts Produced:**
