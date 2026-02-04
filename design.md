@@ -161,13 +161,14 @@ On first run in a new repo:
 5. Create `prompt.md` from the bootstrap instructions
 6. Optionally add `.agent/.lock` and `yield.md` to `.gitignore`
 
-### Setup Script (agent-setup.sh)
+### Setup Script (setup.sh)
 
 Recommended behavior:
 
-- Idempotent: create missing files only
-- Do not overwrite existing content
 - Allow targeting any repo root (default: current directory)
+- Copy missing files and folders without overwriting
+- Always overwrite `.agent/prompt.md`, `.agent/usage.md`, and `.agent/agent.sh`
+- Ensure `.agent/agent.sh` is executable
 - Optionally update `.gitignore` with `.agent/.lock` and `yield.md`
 
 ### Runner Scripts
@@ -1105,10 +1106,10 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 ## Commit Policy
 
 - Commit at the end of each coherent action (especially each execution task)
-- Use the structured commit format:
+- Use a conventional commit type while keeping the agent stage tag:
 
 ```
-[agent:{stage}] {action_summary}
+{type}: [agent:{stage}] {action_summary}
 
 Artifacts:
 - created: {path}
@@ -1117,18 +1118,10 @@ Artifacts:
 Refs: {story-id or task-id}
 ```
 
+Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `perf`.
+
 ## Test Policy
 
 - If you add or modify tests during a task, run those tests before committing
 - If tests fail, fix and rerun until they pass or yield with clear details
-
-## Runner Scripts
-
-- `.agent/agent.sh` is the unified runner (default loop-until-yield, Allowed stages `execution,verification,review`)
-- Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
-- Use `--allowed-stages` to override the allowed stages list
-- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
-- Use `--prompt-only` to print the prompt without executing
-- Loop runs announce iteration number and ISO-8601 timestamps
-- The runner must pass `.agent/prompt.md` as the first message and include a short run header
 ```

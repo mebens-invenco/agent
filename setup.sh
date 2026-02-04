@@ -2,16 +2,11 @@
 set -euo pipefail
 
 TARGET="."
-FORCE="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -f|--force)
-      FORCE="true"
-      shift
-      ;;
     -h|--help)
-      printf "Usage: %s [--force] [target-directory]\n" "$0"
+      printf "Usage: %s [target-directory]\n" "$0"
       exit 0
       ;;
     *)
@@ -27,7 +22,7 @@ if [[ ! -d "$TARGET" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SOURCE_ROOT="$(cd "$SCRIPT_DIR" && pwd)"
 SOURCE_AGENT="$SOURCE_ROOT/.agent"
 
 if [[ ! -d "$SOURCE_AGENT" ]]; then
@@ -52,11 +47,13 @@ ensure_gitignore_entry() {
 
 mkdir -p "$AGENT_DIR"
 
-if [[ "$FORCE" == "true" ]]; then
-  rsync -a "$SOURCE_AGENT/" "$AGENT_DIR/"
-else
-  rsync -a --ignore-existing "$SOURCE_AGENT/" "$AGENT_DIR/"
-fi
+rsync -a --ignore-existing "$SOURCE_AGENT/" "$AGENT_DIR/"
+
+for file in prompt.md usage.md agent.sh; do
+  if [[ -f "$SOURCE_AGENT/$file" ]]; then
+    rsync -a "$SOURCE_AGENT/$file" "$AGENT_DIR/$file"
+  fi
+done
 
 if [[ -f "$AGENT_DIR/agent.sh" ]]; then
   chmod +x "$AGENT_DIR/agent.sh"
