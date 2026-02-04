@@ -58,12 +58,8 @@ else
   rsync -a --ignore-existing "$SOURCE_AGENT/" "$AGENT_DIR/"
 fi
 
-if [[ -f "$AGENT_DIR/agent-run-once.sh" ]]; then
-  chmod +x "$AGENT_DIR/agent-run-once.sh"
-fi
-
-if [[ -f "$AGENT_DIR/agent-loop.sh" ]]; then
-  chmod +x "$AGENT_DIR/agent-loop.sh"
+if [[ -f "$AGENT_DIR/agent.sh" ]]; then
+  chmod +x "$AGENT_DIR/agent.sh"
 fi
 
 ensure_gitignore_entry ".agent/.lock"

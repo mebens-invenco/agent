@@ -69,12 +69,12 @@ Refs: {story-id or task-id}
 
 ## Runner Scripts
 
-- Plan + breakdown: single-iteration runner (e.g., `.agent/agent-run-once.sh`)
-- Execution + verification + review: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution,verification,review`)
-- Review + consolidation: single-iteration runner (e.g., `.agent/agent-run-once.sh`, Allowed stages `review` or `consolidation`)
-- `.agent/agent-run-once.sh` uses `opencode --model` for interactive sessions
-- `.agent/agent-loop.sh` uses `opencode run --model --variant` for looping runs (default: `VARIANT=medium`)
-- Both runners must pass `.agent/prompt.md` as the first message and include a short run header
+- `.agent/agent.sh` is the unified runner (default loop-until-yield, Allowed stages `execution,verification,review`)
+- Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
+- Use `--allowed-stages` to override the allowed stages list
+- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
+- Use `--prompt-only` to print the prompt without executing
+- The runner must pass `.agent/prompt.md` as the first message and include a short run header
 
 ## Project Structure
 

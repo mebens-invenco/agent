@@ -107,8 +107,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 ├── state.yaml                      # Current state: stage, focus, review
 ├── usage.md                        # Day-to-day: commands, tooling, workflows
 ├── prompt.md                       # Runner bootstrap prompt (first message)
-├── agent-run-once.sh               # Single-iteration runner (plan + breakdown)
-├── agent-loop.sh                   # Loop runner (execution)
+├── agent.sh                        # Unified runner (loop by default, --once for single run)
 ├── yield.md                        # Singular. Exists = agent needs user. Delete to resume.
 ├── .lock                           # Uncommitted. Exists during autonomous loop execution.
 │
@@ -171,14 +170,15 @@ Recommended behavior:
 
 ### Runner Scripts
 
-Recommended runners:
+Recommended runner:
 
-- `.agent/agent-run-once.sh` — single-iteration runner (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
-- `.agent/agent-loop.sh` — execution loop (defaults Allowed stages to `execution,verification,review`)
-- `.agent/agent-run-once.sh` uses `opencode --model` for interactive sessions
-- `.agent/agent-loop.sh` uses `opencode run --model --variant` for looping runs (default: `VARIANT=medium`)
+- `.agent/agent.sh` — unified runner (loop by default, Allowed stages `execution,verification,review`)
+- Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
+- Use `--allowed-stages` to override the allowed stages list
+- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
+- Use `--prompt-only` to print the prompt without executing
 
-Both runners should pass `prompt.md` as the first message. Include a short run header so the agent knows the mode and lock state.
+The runner should pass `prompt.md` as the first message. Include a short run header so the agent knows the mode and lock state.
 
 Example run header usage:
 
@@ -1071,10 +1071,11 @@ This document describes day-to-day development workflows for this project.
 
 ## Runner Scripts
 
-- Plan + breakdown: single-iteration runner (e.g., `.agent/agent-run-once.sh`)
-- Execution + verification + review: loop-until-yield runner (e.g., `.agent/agent-loop.sh`, defaults Allowed stages to `execution,verification,review`)
-- Review + consolidation: single-iteration runner (e.g., `.agent/agent-run-once.sh`, Allowed stages `review` or `consolidation`)
-- Both runners must pass `.agent/prompt.md` as the first message and include a short run header
+- `.agent/agent.sh` is the unified runner (default loop-until-yield, Allowed stages `execution,verification,review`)
+- Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
+- Use `--allowed-stages` to override the allowed stages list
+- Use `--prompt-only` to print the prompt without executing
+- The runner must pass `.agent/prompt.md` as the first message and include a short run header
 
 ## Project Structure
 
