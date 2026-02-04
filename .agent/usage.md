@@ -1,22 +1,6 @@
 # Usage
 
-This document describes day-to-day development workflows for this project.
-
-## Quick Reference
-
-| Action | Command |
-|--------|---------|
-| Run dev server | `{command}` |
-| Run all tests | `{command}` |
-| Run unit tests | `{command}` |
-| Run integration tests | `{command}` |
-| Lint | `{command}` |
-| Type check | `{command}` |
-| Build | `{command}` |
-
-## Development Workflow
-
-{Standard workflow steps}
+This document describes how the agent runs. Repo-specific workflows, commands, and environment details belong in `CLAUDE.md`.
 
 ## Agent Process
 
@@ -71,33 +55,3 @@ Refs: {story-id or task-id}
 
 - If you add or modify tests during a task, run those tests before committing
 - If tests fail, fix and rerun until they pass or yield with clear details
-
-## Runner Scripts
-
-- `.agent/agent.sh` is the unified runner (default loop-until-yield, Allowed stages `execution,verification,review`)
-- Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
-- Use `--allowed-stages` to override the allowed stages list
-- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
-- Use `--prompt-only` to print the prompt without executing
-- Loop runs announce iteration number and ISO-8601 timestamps
-- The runner must pass `.agent/prompt.md` as the first message and include a short run header
-
-## Project Structure
-
-```
-src/
-|- {folder}/       # {description}
-`- {folder}/       # {description}
-```
-
-## Environment
-
-{Environment setup instructions}
-
-## Testing Conventions
-
-{Testing patterns and locations}
-
-## Deployment
-
-{Deployment information or link}

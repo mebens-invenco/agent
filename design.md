@@ -105,7 +105,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 ```
 .agent/
 ├── state.yaml                      # Current state: stage, focus, review
-├── usage.md                        # Day-to-day: commands, tooling, workflows
+├── usage.md                        # Agent-only runbook; repo workflows live in CLAUDE.md
 ├── prompt.md                       # Runner bootstrap prompt (first message)
 ├── agent.sh                        # Unified runner (loop by default, --once for single run)
 ├── yield.md                        # Singular. Exists = agent needs user. Delete to resume.
@@ -157,7 +157,7 @@ On first run in a new repo:
 1. Create the `.agent/` structure and `templates/`
 2. Create index files: `.agent/research/README.md`, `.agent/stories/README.md`
 3. Create `state.yaml` with default plan stage
-4. Create `usage.md`
+4. Create `usage.md` (agent-only guidance; repo workflows live in `CLAUDE.md`)
 5. Create `prompt.md` from the bootstrap instructions
 6. Optionally add `.agent/.lock` and `yield.md` to `.gitignore`
 
@@ -1066,23 +1066,7 @@ Tasks execute in phases. All tasks in a phase must complete before the next phas
 ```markdown
 # Usage
 
-This document describes day-to-day development workflows for this project.
-
-## Quick Reference
-
-| Action | Command |
-|--------|---------|
-| Run dev server | `{command}` |
-| Run all tests | `{command}` |
-| Run unit tests | `{command}` |
-| Run integration tests | `{command}` |
-| Lint | `{command}` |
-| Type check | `{command}` |
-| Build | `{command}` |
-
-## Development Workflow
-
-{Standard workflow steps}
+This document describes how the agent runs. Repo-specific workflows, commands, and environment details belong in `CLAUDE.md`.
 
 ## Agent Process
 
@@ -1091,49 +1075,60 @@ This document describes day-to-day development workflows for this project.
 - Plan: research + story creation + acceptance criteria + design notes
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
-- Verification: confirm all acceptance criteria and record results in `acceptance.md`
-- Review: open/update PR, address review feedback, advance on merge
-- Consolidation: archive and merge research
+- Verification: confirm acceptance criteria and record results in `acceptance.md`
+- Review: open/update PR, address review feedback, capture review learnings, advance on merge
+- Consolidation: archive and merge research, merge review learnings
 
 ### Transitions
 
 - Plan requires explicit user approval to exit
-- Breakdown, Execution, and Verification can self-transition with guardrails
-- Verification runs immediately after Execution when allowed; if verification fails, yield for user input
-- In loop mode, proceed to Review only if `review` is allowed; otherwise yield after Verification
-- Review is single-use and re-runnable; it advances to Consolidation only when the PR is merged
+- Breakdown, Execution, and Verification can self-transition
+- Review runs only after Verification passes
 - Consolidation is manually triggered between development cycles, except when Review detects a merged PR and runs it automatically
+
+### Review Learnings
+
+- Capture review feedback in `.agent/stories/{story-id}/review-learnings.md` as short summaries and abstractions
+- Consolidation merges review learnings into the research system (update confidence and applied count)
 
 ### Guardrails
 
 - If `yield.md` exists, stop and return control to the user
 - If `.lock` exists and the last loop was autonomous, treat as dirty state
 
+### Story IDs (Linear)
+
+- Story IDs are Linear ticket IDs in the format `eng-xxxx`
+- If none exists, use a temporary story ID (format `temp-001`)
+- Ticket creation and story renaming happen automatically on Plan -> Breakdown
+
+## Commit Policy
+
+- Commit at the end of each coherent action (especially each execution task)
+- Use the structured commit format:
+
+```
+[agent:{stage}] {action_summary}
+
+Artifacts:
+- created: {path}
+- updated: {path}
+
+Refs: {story-id or task-id}
+```
+
+## Test Policy
+
+- If you add or modify tests during a task, run those tests before committing
+- If tests fail, fix and rerun until they pass or yield with clear details
+
 ## Runner Scripts
 
 - `.agent/agent.sh` is the unified runner (default loop-until-yield, Allowed stages `execution,verification,review`)
 - Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
 - Use `--allowed-stages` to override the allowed stages list
+- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
 - Use `--prompt-only` to print the prompt without executing
+- Loop runs announce iteration number and ISO-8601 timestamps
 - The runner must pass `.agent/prompt.md` as the first message and include a short run header
-
-## Project Structure
-
-```
-src/
-├── {folder}/       # {description}
-└── {folder}/       # {description}
-```
-
-## Environment
-
-{Environment setup instructions}
-
-## Testing Conventions
-
-{Testing patterns and locations}
-
-## Deployment
-
-{Deployment information or link}
 ```

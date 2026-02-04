@@ -45,7 +45,7 @@
 
 - Use `gh` to locate an existing PR for the current branch
 - If the PR is merged, transition to consolidation and execute consolidation actions immediately
-- If no PR exists, push the branch and create a PR using any template found (search `.github/` case-insensitively)
+- If no PR exists (including when only closed PRs exist), push the branch and create a PR using any template found (search `.github/` case-insensitively)
 - If a PR exists, collect unresolved review threads and implement requested changes
   - Commit and push changes only if authorized
 - Synthesize review comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
