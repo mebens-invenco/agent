@@ -12,12 +12,12 @@
    - Use team `eng` and include an acceptance criteria summary table in the Linear description
 5. For plan/breakdown: read the active story README, definition, and acceptance
 6. For execution:
-   - Read the story task graph at `stories/{story-id}/tasks/task-graph.md`
+   - Read the story task graph at `.agent/stories/{story-id}/tasks/task-graph.md`
    - If `current.focus.task` is set, read only that task file
    - If not set, select the next pending task from the task graph, set `current.focus.task`, then read only that task file
    - Do not read other task files unless a dependency blocks progress or the active task explicitly references them
 7. For verification:
-   - Read `stories/{story-id}/acceptance.md`
+   - Read `.agent/stories/{story-id}/acceptance.md`
    - Confirm each acceptance criterion and record results in `acceptance.md`
    - If verification fails or is blocked, create `yield.md` and stop
 8. For review:

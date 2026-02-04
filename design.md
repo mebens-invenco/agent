@@ -54,10 +54,10 @@
 
 | Stage | Mode | Purpose | Artifacts | Exit Condition |
 |-------|------|---------|-----------|----------------|
-| **Plan** | Interactive only | Research, story definition, acceptance criteria, and design guidance | research/*, stories/* | User approval |
-| **Breakdown** | Autonomous capable | Decompose into atomic, verifiable tasks | stories/*/tasks/* | All tasks defined |
+| **Plan** | Interactive only | Research, story definition, acceptance criteria, and design guidance | .agent/research/*, .agent/stories/* | User approval |
+| **Breakdown** | Autonomous capable | Decompose into atomic, verifiable tasks | .agent/stories/*/tasks/* | All tasks defined |
 | **Execution** | Autonomous capable | Implement tasks in dependency order | Code changes | All tasks complete |
-| **Verification** | Autonomous capable | Confirm acceptance criteria and record results in acceptance | stories/*/acceptance.md | All AC verified or deferred |
+| **Verification** | Autonomous capable | Confirm acceptance criteria and record results in acceptance | .agent/stories/*/acceptance.md | All AC verified or deferred |
 | **Review** | Autonomous capable (single-use) | Create/update PR and address review feedback | PR, state updates | PR merged, then run Consolidation |
 | **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts and merge related research | Archives, merges | User approval or Review auto-run complete |
 
@@ -154,7 +154,7 @@ Plan mode is a stage-locked workflow used to define stories, acceptance criteria
 On first run in a new repo:
 
 1. Create the `.agent/` structure and `templates/`
-2. Create index files: `research/README.md`, `stories/README.md`
+2. Create index files: `.agent/research/README.md`, `.agent/stories/README.md`
 3. Create `state.yaml` with default plan stage
 4. Create `usage.md`
 5. Create `prompt.md` from the bootstrap instructions
@@ -252,11 +252,11 @@ ALLOWED_STAGES="review"
 - User collaboration on trade-offs
 
 **Artifacts Produced:**
-- `research/internal/{topic}/README.md` + `{topic}.md`
-- `research/external/{topic}/README.md` + `{topic}.md`
-- `stories/{story-id}/README.md`
-- `stories/{story-id}/definition.md`
-- `stories/{story-id}/acceptance.md`
+- `.agent/research/internal/{topic}/README.md` + `{topic}.md`
+- `.agent/research/external/{topic}/README.md` + `{topic}.md`
+- `.agent/stories/{story-id}/README.md`
+- `.agent/stories/{story-id}/definition.md`
+- `.agent/stories/{story-id}/acceptance.md`
 
 **Exit Condition:** User explicitly approves that planning work (stories, acceptance criteria, design) is complete.
 
@@ -273,8 +273,8 @@ ALLOWED_STAGES="review"
 - Create verification approach for each task
 
 **Artifacts Produced:**
-- `stories/{story-id}/tasks/{task-id}.md`
-- `stories/{story-id}/tasks/task-graph.md`
+- `.agent/stories/{story-id}/tasks/{task-id}.md`
+- `.agent/stories/{story-id}/tasks/task-graph.md`
 
 **Exit Condition:** All tasks are defined and dependency graph is complete.
 
@@ -284,7 +284,7 @@ ALLOWED_STAGES="review"
 **Purpose:** Implement tasks in dependency order.
 
 **Activities:**
-- Execute tasks in phase order per stories/{story-id}/tasks/task-graph.md
+- Execute tasks in phase order per `.agent/stories/{story-id}/tasks/task-graph.md`
 - Verify each task deterministically (tests, linting, type checking)
 - Update task status
 - If task verification fails, attempt to fix; if cannot fix, yield
@@ -303,7 +303,7 @@ ALLOWED_STAGES="review"
 **Timing:** Typically runs immediately after Execution within the same loop when allowed.
 
 **Activities:**
-- Read `stories/{story-id}/acceptance.md`
+- Read `.agent/stories/{story-id}/acceptance.md`
 - Confirm each acceptance criterion
 - Run automated tests where possible
 - Document manual verification requirements
@@ -311,7 +311,7 @@ ALLOWED_STAGES="review"
 - If verification fails or is blocked, yield (blocker before Review)
 
 **Artifacts Produced:**
-- `stories/{story-id}/acceptance.md`
+- `.agent/stories/{story-id}/acceptance.md`
 
 **Exit Condition:** All acceptance criteria verified or explicitly deferred (with reason).
 
@@ -618,7 +618,7 @@ Most artifacts have:
 1. **README.md** — Executive summary (the "head"). Enough for agent to determine relevance.
 2. **{name}.md** — Full details (the "body"). Loaded only when needed.
 
-Tasks are single-file artifacts stored under `stories/{story-id}/tasks/` and linked from the task graph.
+Tasks are single-file artifacts stored under `.agent/stories/{story-id}/tasks/` and linked from the task graph.
 
 ### Index Files
 
@@ -659,7 +659,7 @@ Story IDs should use Linear ticket IDs (`eng-xxxx`). Temporary IDs (`temp-001`) 
 
 ### Task Graph
 
-A single file `stories/{story-id}/tasks/task-graph.md` defines execution order, dependencies, and the current/next task pointer. Each row includes a one-line summary so the next task can be chosen without opening other task files:
+A single file `.agent/stories/{story-id}/tasks/task-graph.md` defines execution order, dependencies, and the current/next task pointer. Each row includes a one-line summary so the next task can be chosen without opening other task files:
 
 ```markdown
 # Task Graph
@@ -695,7 +695,7 @@ Tasks execute in phases. All tasks in a phase must complete before the next phas
 
 ### Acceptance Verification
 
-Verification results live inside `stories/{story-id}/acceptance.md` under each criterion:
+Verification results live inside `.agent/stories/{story-id}/acceptance.md` under each criterion:
 
 ```markdown
 ## AC-001: {Short description}
@@ -719,13 +719,13 @@ Research captures internal and external findings, including learnings and prefer
 
 ### Structure
 
-1. **Root:** `research/README.md` — Index of research topics
-2. **Topics:** `research/internal/{topic}/` and `research/external/{topic}/`
+1. **Root:** `.agent/research/README.md` — Index of research topics
+2. **Topics:** `.agent/research/internal/{topic}/` and `.agent/research/external/{topic}/`
 3. **Topic files:** `README.md` + `{topic}.md` for full details
 
 ### Research Index Fields
 
-Recommended columns for `research/README.md`:
+Recommended columns for `.agent/research/README.md`:
 
 - Topic
 - Summary
