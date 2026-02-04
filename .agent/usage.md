@@ -39,10 +39,10 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 ## Commit Policy
 
 - Commit at the end of each coherent action (especially each execution task)
-- Use the structured commit format:
+- Use a conventional commit type while keeping the agent stage tag:
 
 ```
-[agent:{stage}] {action_summary}
+{type}: [agent:{stage}] {action_summary}
 
 Artifacts:
 - created: {path}
@@ -50,6 +50,8 @@ Artifacts:
 
 Refs: {story-id or task-id}
 ```
+
+Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `perf`.
 
 ## Test Policy
 
