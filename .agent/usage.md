@@ -74,6 +74,7 @@ Refs: {story-id or task-id}
 - Use `--allowed-stages` to override the allowed stages list
 - Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
 - Use `--prompt-only` to print the prompt without executing
+- Loop runs announce iteration number and ISO-8601 timestamps
 - The runner must pass `.agent/prompt.md` as the first message and include a short run header
 
 ## Project Structure

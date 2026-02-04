@@ -139,9 +139,13 @@ if [[ "$LOOP" == "once" ]]; then
   exit 0
 fi
 
+ITERATION=0
 while true; do
   if [[ -f "$YIELD_PATH" ]]; then
     exit 0
   fi
+  ITERATION=$((ITERATION + 1))
+  printf "Starting loop iteration %s at %s.\n" "$ITERATION" "$(date -Is)"
   run_once
+  printf "Finished loop iteration %s at %s.\n" "$ITERATION" "$(date -Is)"
 done
