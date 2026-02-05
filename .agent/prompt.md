@@ -47,7 +47,7 @@
 - If the PR is merged, transition to consolidation and execute consolidation actions immediately
 - If no PR exists (including when only closed PRs exist), push the branch and create a PR using any template found (search `.github/` case-insensitively)
 - If a PR exists, collect unresolved review threads and implement requested changes
-  - Commit and push changes only if authorized
+  - Commit and push changes to update the PR
 - Synthesize review comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
   - If no review comments exist, record that in `review-learnings.md` with the date
 - Record PR metadata and status in state
@@ -66,7 +66,7 @@
 1. Update relevant indices for any artifacts created or updated
 2. Update `.agent/state.yaml` (current stage, focus, review metadata, allowed stages)
 
-Commit Authorization: This prompt invocation is the user's explicit request to commit ONLY execution-stage task changes. Do not commit in other stages unless the user explicitly requests it. If unsure whether a change is execution-stage work, do not commit and ask.
+Commit Authorization: This prompt invocation is the user's explicit request to commit execution-stage task changes and review-stage fixes responding to PR feedback. Do not commit in other stages unless the user explicitly requests it. If unsure whether a change is execution or review feedback, do not commit and ask.
 
 ## Flow Control
 
