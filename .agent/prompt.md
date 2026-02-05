@@ -48,6 +48,7 @@
 - If no PR exists (including when only closed PRs exist), push the branch and create a PR using any template found (search `.github/` case-insensitively)
 - If a PR exists, collect unresolved review threads and implement requested changes
   - Commit and push changes to update the PR
+  - Mark addressed review threads as resolved after pushing fixes
 - Synthesize review comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
   - If no review comments exist, record that in `review-learnings.md` with the date
 - Record PR metadata and status in state
