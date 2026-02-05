@@ -8,7 +8,7 @@ YIELD_PATH="${YIELD_PATH:-$AGENT_DIR/yield.md}"
 MODE="${MODE:-}"
 LOOP="${LOOP:-}"
 ALLOWED_STAGES="${ALLOWED_STAGES:-}"
-MODEL="${MODEL:-openai/gpt-5.2-codex}"
+MODEL="${MODEL:-openai/gpt-5.3-codex}"
 VARIANT="${VARIANT:-medium}"
 
 CLI_ONCE="false"
@@ -23,7 +23,7 @@ Options:
   --once                Run a single iteration (default: loop)
   --prompt-only         Print the prompt and exit
   --allowed-stages STR  Override allowed stages list
-  --model STR           Override model (default: openai/gpt-5.2-codex)
+  --model STR           Override model (default: openai/gpt-5.3-codex)
   --variant STR         Override variant (default: medium)
   -h, --help            Show this help message
 EOF

@@ -178,7 +178,7 @@ Recommended runner:
 - `.agent/agent.sh` — unified runner (loop by default, Allowed stages `execution,verification,review`)
 - Use `--once` for single-iteration runs (defaults to plan; expand Allowed stages to include breakdown, review, or consolidation)
 - Use `--allowed-stages` to override the allowed stages list
-- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.2-codex`, `VARIANT=medium`)
+- Uses `opencode run --model --variant` for all runs (default: `MODEL=openai/gpt-5.3-codex`, `VARIANT=medium`)
 - Use `--prompt-only` to print the prompt without executing
 
 The runner should pass `prompt.md` as the first message. Include a short run header so the agent knows the mode and lock state.
