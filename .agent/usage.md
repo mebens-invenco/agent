@@ -10,7 +10,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
 - Verification: confirm acceptance criteria and record results in `acceptance.md`
-- Review: open/update PR, address review feedback, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
+- Review: open/update PR, if PR exists pull CI status checks alongside active comments, address review feedback, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
 - Consolidation: archive and merge research, merge review learnings
 
 ### Transitions
