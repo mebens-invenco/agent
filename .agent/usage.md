@@ -57,3 +57,4 @@ Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, 
 
 - If you add or modify tests during a task, run those tests before committing
 - If tests fail, fix and rerun until they pass or yield with clear details
+- During Execution, only automated verification blocks task completion; document manual verification as pending/deferred for the Verification stage

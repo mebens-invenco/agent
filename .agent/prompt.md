@@ -30,7 +30,8 @@
 - If `current.focus.task` is set, read only that task file
 - If not set, select the next pending task from the task graph, set `current.focus.task`, then read only that task file
 - Implement one coherent task, update task status and code changes
-- Run any tests you add or modify at the end of the task; fix failures before proceeding
+- Run relevant automated checks at the end of the task (for example: added/modified tests, lint, type checks); fix failures before proceeding
+- If manual verification remains, document it as pending/deferred for the Verification stage; do not block Execution on manual verification
 - Commit at the end of the task using the structured commit format in `usage.md` (see Commit Authorization below)
 - If blocked or approval is required, create `.agent/yield.md` and stop
 
@@ -47,6 +48,7 @@
 - If the PR is merged, transition to consolidation and execute consolidation actions immediately
 - If no PR exists (including when only closed PRs exist), push the branch and create a PR using any template found (search `.github/` case-insensitively)
 - If a PR exists, collect unresolved review threads and pull CI status checks via `gh pr view --json statusCheckRollup`
+- If running in autonomous mode and the PR has no unresolved review threads and no failing CI status checks, run `sleep 60` and return control (do not create `.agent/yield.md`)
 - If a PR exists, implement requested changes
   - Commit and push changes to update the PR
   - Mark addressed review threads as resolved after pushing fixes

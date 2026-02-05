@@ -288,9 +288,9 @@ ALLOWED_STAGES="review"
 
 **Activities:**
 - Execute tasks in phase order per `.agent/stories/{story-id}/tasks/task-graph.md`
-- Verify each task deterministically (tests, linting, type checking)
-- Update task status
-- If task verification fails, attempt to fix; if cannot fix, yield
+- Verify each task with automated checks where possible (tests, linting, type checking)
+- Update task status and capture any required manual verification as pending/deferred for the Verification stage
+- If automated task verification fails, attempt to fix; if cannot fix, yield
 
 **Artifacts Produced:**
 - Code and configuration changes in the repository
@@ -1031,7 +1031,8 @@ Each criterion follows the pattern:
 
 - [ ] {Concrete checklist item}
 - [ ] {Another checklist item}
-- [ ] Verification passes
+- [ ] Automated verification passes
+- [ ] Manual verification requirements are documented for Verification stage (if applicable)
 ```
 
 ### Task Graph Template
@@ -1124,4 +1125,5 @@ Recommended types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, 
 
 - If you add or modify tests during a task, run those tests before committing
 - If tests fail, fix and rerun until they pass or yield with clear details
+- During Execution, only automated verification blocks task completion; document manual verification as pending/deferred for the Verification stage
 ```

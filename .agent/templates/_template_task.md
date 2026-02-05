@@ -53,4 +53,5 @@
 
 - [ ] {Concrete checklist item}
 - [ ] {Another checklist item}
-- [ ] Verification passes
+- [ ] Automated verification passes
+- [ ] Manual verification requirements are documented for Verification stage (if applicable)
