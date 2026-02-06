@@ -26,6 +26,10 @@ Options:
   --model STR           Override model (default: openai/gpt-5.3-codex)
   --variant STR         Override variant (default: medium)
   -h, --help            Show this help message
+
+Note:
+  If a yield file exists, the script removes it and exits immediately.
+  Address the blocker, then run the script again to resume.
 EOF
 }
 
@@ -142,6 +146,7 @@ fi
 ITERATION=0
 while true; do
   if [[ -f "$YIELD_PATH" ]]; then
+    printf "Yield file detected at %s. Removing it and exiting so you can address the blocker.\n" "$YIELD_PATH"
     rm -f "$YIELD_PATH"
     exit 0
   fi

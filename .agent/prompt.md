@@ -30,9 +30,11 @@
 - If `current.focus.task` is set, read only that task file
 - If not set, select the next pending task from the task graph, set `current.focus.task`, then read only that task file
 - Implement one coherent task, update task status and code changes
+- Hard limit: execute exactly one task per invocation/run; do not implement additional tasks in the same run
 - Run relevant automated checks at the end of the task (for example: added/modified tests, lint, type checks); fix failures before proceeding
 - If manual verification remains, document it as pending/deferred for the Verification stage; do not block Execution on manual verification
 - Commit at the end of the task using the structured commit format in `usage.md` (see Commit Authorization below)
+- After committing the task, do not select or read another task file in this run
 - If blocked or approval is required, create `.agent/yield.md` and stop
 
 ### Verification
@@ -74,6 +76,7 @@ Commit Authorization: This prompt invocation is the user's explicit request to c
 
 ## Flow Control
 
-- If execution completes and `verification` is allowed, proceed to verification in the same run
+- Execution stage runs exactly one task per invocation; if more execution tasks remain after that task, return control without transitioning stages
+- If execution is fully complete and `verification` is allowed, proceed to verification in the same run
 - If verification passes and `review` is allowed, proceed to review in the same run; if `review` is not allowed, return control (create `.agent/yield.md` if in autonomous loop)
 - Yield only after review or when blocked
