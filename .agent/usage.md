@@ -11,7 +11,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 - Execution: implement tasks in dependency order
 - Verification: confirm acceptance criteria and record results in `acceptance.md`
 - Review: open/update PR, if PR exists pull CI status checks alongside active comments, address review feedback, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
-- Consolidation: archive and merge research, merge review learnings
+- Consolidation: archive and merge research, merge review learnings, and synthesize reusable abstractions from concrete implementation outcomes
 
 ### Transitions
 
@@ -24,6 +24,13 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 
 - Capture review feedback in `.agent/stories/{story-id}/review-learnings.md` as short summaries and abstractions
 - Consolidation merges review learnings into the research system (update confidence and applied count)
+
+### Consolidation Learnings
+
+- Consolidation converts story-specific outcomes into reusable learnings at multiple levels when applicable: story/page, page or flow archetype, and related/shared components
+- Each promoted learning includes applicability boundaries: where it applies and where it does not
+- Keep a brief trace to the originating story, but prioritize generalized guidance that can be reused in future work
+- Example: implementing a single page should produce learnings for that page type and related component patterns, not only that single page
 
 ### Guardrails
 

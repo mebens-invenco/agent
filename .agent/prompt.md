@@ -66,6 +66,8 @@
 - Merge overlapping research artifacts (with user approval)
 - Consolidate research learnings and clean up indices
 - Merge review learnings from `.agent/stories/{story-id}/review-learnings.md` into research artifacts
+- Synthesize merged learnings into reusable abstractions at multiple levels when applicable: story/page, page or flow archetype, and related/shared components
+- Record applicability boundaries for each promoted learning (where it applies and where it does not) before updating confidence and applied count
 - If consolidation is complete, create `.agent/yield.md` for approval and stop
 
 ## Common Post-steps (always)

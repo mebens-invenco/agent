@@ -59,7 +59,7 @@
 | **Execution** | Autonomous capable | Implement tasks in dependency order | Code changes | All tasks complete |
 | **Verification** | Autonomous capable | Confirm acceptance criteria and record results in acceptance | .agent/stories/*/acceptance.md | All AC verified or deferred |
 | **Review** | Autonomous capable (single-use) | Create/update PR, address review feedback, and capture review learnings | PR, review learnings, state updates | PR merged, then run Consolidation |
-| **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts and merge related research | Archives, merges | User approval or Review auto-run complete |
+| **Consolidation** | Interactive only (auto-run on merged PR) | Archive stale artifacts, merge related research, and promote reusable abstractions | Archives, merged research, generalized learnings | User approval or Review auto-run complete |
 
 ### Stage Transitions
 
@@ -355,13 +355,15 @@ ALLOWED_STAGES="review"
 ### Consolidation Stage
 
 **Mode:** Interactive only (auto-run when Review detects merged PR)  
-**Purpose:** Archive stale artifacts and merge related research. Triggered manually by user between development cycles, or automatically after Review detects a merged PR.
+**Purpose:** Archive stale artifacts, merge related research, and synthesize reusable abstractions from concrete outcomes. Triggered manually by user between development cycles, or automatically after Review detects a merged PR.
 
 **Activities:**
 - Archive superseded/completed stories to `_archive/`
 - Merge overlapping research artifacts (with user approval)
-- Consolidate research learnings (merge duplicates, update confidence)
+- Consolidate research learnings (merge duplicates, update confidence, maintain trace links to source stories)
 - Merge review learnings into research artifacts (update confidence, applied count)
+- Synthesize concrete outcomes into reusable abstractions across story/page, page or flow archetype, and related/shared component levels
+- Record applicability boundaries for promoted learnings (where they apply and where they do not)
 - Clean up dead links in indices
 - Reset task graph for next cycle
 
@@ -746,14 +748,18 @@ Recommended columns for `.agent/research/README.md`:
 
 Each research body can include learnings with explicit metadata:
 
+- **Abstraction level:** {story-specific | archetype | component | system}
+- **Applicability:** {where this should be applied}
+- **Non-applicability:** {where this should not be applied}
 - **Confidence:** {established | emerging | experimental | low}
 - **Applied count:** {N}
 - **Source:** {user preference | observed pattern | agent hypothesis}
+- **Trace:** {originating story/task/PR links}
 - **Conflicts:** links to related or superseded research
 
 ### Review Learnings
 
-Review learnings are captured per story in `.agent/stories/{story-id}/review-learnings.md`. Consolidation merges these learnings into the research system, updating confidence and applied counts, and linking to relevant topics.
+Review learnings are captured per story in `.agent/stories/{story-id}/review-learnings.md`. Consolidation merges these learnings into the research system, promotes reusable abstractions at story, archetype, and component levels, records applicability boundaries, updates confidence and applied counts, and links to relevant topics.
 
 ### Confidence Levels
 
@@ -823,10 +829,14 @@ The agent yields to user if:
 ### {Learning Title}
 
 - **Pattern:** {clear description of the preferred pattern}
+- **Abstraction level:** {story-specific | archetype | component | system}
+- **Applicability:** {where this should be applied}
+- **Non-applicability:** {where this should not be applied}
 - **Rationale:** {why this is preferred}
 - **Source:** {user preference | observed pattern | agent hypothesis}
 - **Confidence:** {established | emerging | experimental | low}
 - **Applied count:** {N}
+- **Trace:** {originating story/task/PR links}
 - **Conflicts:** {links to related or superseded research}
 
 ## Sources
@@ -963,6 +973,9 @@ Each criterion follows the pattern:
 ### {Learning Title}
 
 - **Summary:** {short abstraction derived from comments}
+- **Abstraction level:** {story-specific | archetype | component | system}
+- **Applicability:** {where this should be applied}
+- **Non-applicability:** {where this should not be applied}
 - **Rationale:** {why this matters}
 - **Source:** {review feedback | user preference}
 - **Confidence:** {established | emerging | experimental | low}
@@ -1080,7 +1093,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 - Execution: implement tasks in dependency order
 - Verification: confirm acceptance criteria and record results in `acceptance.md`
 - Review: open/update PR, address review feedback from review threads and issue conversation comments, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
-- Consolidation: archive and merge research, merge review learnings
+- Consolidation: archive and merge research, merge review learnings, and synthesize reusable abstractions from concrete implementation outcomes
 
 ### Transitions
 
@@ -1093,6 +1106,13 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 
 - Capture review feedback in `.agent/stories/{story-id}/review-learnings.md` as short summaries and abstractions
 - Consolidation merges review learnings into the research system (update confidence and applied count)
+
+### Consolidation Learnings
+
+- Consolidation converts story-specific outcomes into reusable learnings at multiple levels when applicable: story/page, page or flow archetype, and related/shared components
+- Each promoted learning includes applicability boundaries: where it applies and where it does not
+- Keep a brief trace to the originating story, but prioritize generalized guidance that can be reused in future work
+- Example: implementing a single page should produce learnings for that page type and related component patterns, not only that single page
 
 ### Guardrails
 

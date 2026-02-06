@@ -18,10 +18,14 @@
 ### {Learning Title}
 
 - **Pattern:** {clear description of the preferred pattern}
+- **Abstraction level:** {story-specific | archetype | component | system}
+- **Applicability:** {where this should be applied}
+- **Non-applicability:** {where this should not be applied}
 - **Rationale:** {why this is preferred}
 - **Source:** {user preference | observed pattern | agent hypothesis}
 - **Confidence:** {established | emerging | experimental | low}
 - **Applied count:** {N}
+- **Trace:** {originating story/task/PR links}
 - **Conflicts:** {links to related or superseded research}
 
 ## Sources

@@ -6,13 +6,16 @@
 
 ## Comment Summaries
 
-{Short summaries of review comments. Include thread links or quoted excerpts.}
+{Short summaries of review feedback from review threads and issue conversation comments. Include links or quoted excerpts.}
 
 ## Abstractions / Learnings
 
 ### {Learning Title}
 
 - **Summary:** {short abstraction derived from comments}
+- **Abstraction level:** {story-specific | archetype | component | system}
+- **Applicability:** {where this should be applied}
+- **Non-applicability:** {where this should not be applied}
 - **Rationale:** {why this matters}
 - **Source:** {review feedback | user preference}
 - **Confidence:** {established | emerging | experimental | low}
