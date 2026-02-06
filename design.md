@@ -327,10 +327,11 @@ ALLOWED_STAGES="review"
 - Push the current branch to the remote
 - Discover an existing PR for the current branch; if none exists, create one with `gh pr create`
 - If a PR template exists, populate it with the story summary, acceptance verification results, tests run, and known risks
-- If a PR exists, pull unresolved review threads and implement requested changes
+- If a PR exists, pull unresolved review threads and issue conversation comments, then implement requested changes from both sources
 - Commit and push changes after addressing feedback
-- Synthesize review comments into short summaries and abstractions; record in `.agent/stories/{story-id}/review-learnings.md`
-- If no review comments exist, record that in `review-learnings.md` with date
+- Mark addressed review threads as resolved and reply on issue conversation comments when needed to confirm fixes or follow-ups
+- Synthesize review feedback from both review threads and issue conversation comments into short summaries and abstractions; record in `.agent/stories/{story-id}/review-learnings.md`
+- If no actionable feedback exists in either source, record that in `review-learnings.md` with date
 - If a retest request template exists and a retest is needed, post a PR comment using that template
 - Check PR status (open/merged) and approvals; record PR metadata in state
 - If PR is merged, transition to Consolidation and execute it immediately in the same run
@@ -347,7 +348,7 @@ ALLOWED_STAGES="review"
 
 **Exit Condition:** PR merged; Review transitions to Consolidation and runs it immediately.
 
-**Notes:** Review is re-runnable and always returns control after a single pass. If the PR is open and approved but not merged, report status and suggest merging; otherwise report outstanding reviews and stop.
+**Notes:** Review is re-runnable and always returns control after a single pass. If the PR is open and approved but not merged, report status and suggest merging; otherwise report outstanding review threads and issue conversation comments and stop.
 
 **Constraint:** Review runs only after Verification has passed.
 
@@ -392,7 +393,7 @@ LOOP START
 │      - In plan/breakdown: read the active story README, definition, and acceptance
 │      - In execution: read task-graph.md, then only the active task file; avoid other task files unless a dependency blocks progress or the active task explicitly references them
 │      - In verification: read acceptance criteria and current results
-│      - In review: identify PR status, unresolved review threads, and applicable templates
+│      - In review: identify PR status, unresolved review threads, issue conversation comments, and applicable templates
 │      - Load body files only when needed
 │
 ├─→ 2. DECIDE
@@ -955,7 +956,7 @@ Each criterion follows the pattern:
 
 ## Comment Summaries
 
-{Short summaries of review comments. Include thread links or quoted excerpts.}
+{Short summaries of review feedback from both review threads and issue conversation comments. Include links or quoted excerpts.}
 
 ## Abstractions / Learnings
 
@@ -1078,7 +1079,7 @@ This document describes how the agent runs. Repo-specific workflows, commands, a
 - Breakdown: story tasks + task graph
 - Execution: implement tasks in dependency order
 - Verification: confirm acceptance criteria and record results in `acceptance.md`
-- Review: open/update PR, address review feedback, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
+- Review: open/update PR, address review feedback from review threads and issue conversation comments, commit and push fixes, resolve addressed threads, capture review learnings, advance on merge
 - Consolidation: archive and merge research, merge review learnings
 
 ### Transitions

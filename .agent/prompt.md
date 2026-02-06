@@ -49,13 +49,14 @@
 - Use `gh` to locate an existing PR for the current branch
 - If the PR is merged, transition to consolidation and execute consolidation actions immediately
 - If no PR exists (including when only closed PRs exist), push the branch and create a PR using any template found (search `.github/` case-insensitively)
-- If a PR exists, collect unresolved review threads and pull CI status checks via `gh pr view --json statusCheckRollup`
-- If running in autonomous mode and the PR has no unresolved review threads and no failing CI status checks, run `sleep 60` and return control (do not create `.agent/yield.md`)
-- If a PR exists, implement requested changes
+- If a PR exists, collect unresolved review threads, pull issue conversation comments on the PR, and pull CI status checks via `gh pr view --json statusCheckRollup`
+- If running in autonomous mode and the PR has no unresolved review threads, no unaddressed issue conversation comments, and no failing CI status checks, run `sleep 60` and return control (do not create `.agent/yield.md`)
+- If a PR exists, implement requested changes from both review threads and issue conversation comments
   - Commit and push changes to update the PR
   - Mark addressed review threads as resolved after pushing fixes
-- Synthesize review comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
-  - If no review comments exist, record that in `review-learnings.md` with the date
+  - Reply on issue conversation comments when needed to confirm a fix or explain follow-up
+- Synthesize review feedback from both review threads and issue conversation comments into short summaries and abstractions in `.agent/stories/{story-id}/review-learnings.md`
+  - If no actionable feedback exists in either source, record that in `review-learnings.md` with the date
 - Record PR metadata and status in state
 - Return control after the single review pass
 
